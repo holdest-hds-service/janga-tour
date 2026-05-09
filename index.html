@@ -1,336 +1,535 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mini Social Media - Supabase</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Social - Supabase OTP</title>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 16px; background:#0b0f19; color:#e8eefc; }
-    .card { background:#111827; padding:16px; border-radius:12px; max-width:900px; margin: 0 auto 16px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+    .card { background:#111827; padding:16px; border-radius:12px; max-width:980px; margin: 0 auto 16px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
     h1 { margin: 0 0 10px; font-size: 20px; }
-    .grid { display:grid; grid-template-columns: 1fr; gap:16px; max-width:900px; margin:0 auto 40px; }
-    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
-    label { display:block; font-size: 13px; opacity:.9; margin-bottom:6px; }
-    input, textarea, button { width:100%; border-radius:10px; padding:10px; border:1px solid #2b3550; background:#0b1220; color:#e8eefc; }
+    .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
+    @media (min-width: 900px) { .grid { grid-template-columns: 420px 1fr; } }
+
+    input, textarea, button, select { width:100%; border-radius:10px; padding:10px; border:1px solid #2b3550; background:#0b1220; color:#e8eefc; }
     textarea { min-height: 70px; resize: vertical; }
-    button { cursor:pointer; background:#2563eb; border-color:#2563eb; font-weight:700; }
-    button.secondary { background:#1f2937; border-color:#374151; font-weight:600; }
+    button { cursor:pointer; background:#2563eb; border-color:#2563eb; font-weight:800; }
+    button.secondary { background:#1f2937; border-color:#374151; font-weight:700; }
+    button.ghost { background:transparent; border-color:#374151; font-weight:700; }
+    .row { display:flex; gap:10px; align-items:center; }
+    .row > * { flex:1; }
+
+    .sectionTitle { margin: 4px 0 10px; font-size: 15px; opacity:.95; font-weight:900; }
+    .panel { border:1px solid #26324f; border-radius:12px; padding:14px; background:#0f172a; margin-top:12px; }
+    .muted { font-size: 12px; opacity:.75; }
+    .error { color:#ff6b6b; font-weight:800; margin-top:8px; }
+    .ok { color:#63ffb1; font-weight:800; margin-top:8px; }
+
     .post { padding:14px; border:1px solid #26324f; border-radius:14px; background:#0f172a; }
     .meta { font-size: 12px; opacity:.85; margin-bottom:10px; }
-    img, video { max-width: 100%; border-radius:12px; display:block; }
-    .actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    img, video { max-width: 100%; border-radius:12px; display:block; margin-bottom:10px; }
+    .actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:6px; }
     .pill { padding:6px 10px; border-radius:999px; border:1px solid #26324f; background:#0b1220; font-size: 13px; }
     .comment { border-top:1px solid #26324f; margin-top:12px; padding-top:12px; }
-    .error { color:#ff6b6b; font-weight:700; margin-top:8px; }
-    .ok { color:#63ffb1; font-weight:700; margin-top:8px; }
-    .username-banner { padding:12px; border-radius:12px; border:1px solid #26324f; background:#0f172a; margin-top:10px; }
-    .username-banner input { width:100%; }
-    @media (min-width: 900px) { .grid-cols { grid-template-columns: 380px 1fr; } }
+    .hide { display:none !important; }
+    .smallBtn { width:auto; padding:10px 14px; }
+    .field { margin-top:10px; }
   </style>
 </head>
+
 <body>
+  <div class="card grid">
+    <!-- LEFT: AUTH + POST FORM -->
+    <div>
+      <h1>Compte + Publier</h1>
 
-<div class="card grid grid-cols" style="grid-template-columns:1fr;">
-  <div>
-    <h1>Publier (upload media + post)</h1>
-    <div style="display:flex;gap:12px;flex-direction:column;">
-      <div>
-        <label for="caption">Caption</label>
-        <textarea id="caption" placeholder="Écris une description..."></textarea>
-      </div>
-      <div>
-        <label for="mediaFile">Image ou vidéo</label>
-        <input id="mediaFile" type="file" accept="image/*,video/*">
-      </div>
-      <button id="btnPublish">Publier</button>
-      <div style="display:flex; gap:10px; margin-top:6px;">
-        <button class="secondary" id="btnSignIn">Connexion (Email)</button>
-      </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-        <div style="flex:1; min-width:220px;">
-          <label for="email">Email</label>
-          <input id="email" type="email" placeholder="email@exemple.com">
-        </div>
-        <div style="flex:1; min-width:220px;">
-          <label for="redirect">Redirect URL (optionnel)</label>
-          <input id="redirect" placeholder="ex: https://ton-site.com">
-        </div>
-      </div>
-      <div id="status"></div>
+      <div class="sectionTitle">1) S’inscrire / Connexion (OTP email)</div>
 
-      <!-- Username prompt -->
-      <div id="usernamePrompt" class="username-banner" style="display:none;">
-        <b>Choisis ton nom d'utilisateur</b>
-        <div style="margin-top:10px;">
-          <label for="usernameInput">Username</label>
-          <input id="usernameInput" placeholder="ex: toto">
+      <div id="stepRequestOtp" class="panel">
+        <div class="row">
+          <div>
+            <label>Email</label>
+            <input id="email" type="email" placeholder="email@exemple.com" />
+          </div>
         </div>
-        <div style="margin-top:10px;">
-          <button class="secondary" id="btnSaveUsername" style="width:auto;">Sauvegarder</button>
+
+        <div class="field">
+          <label class="muted">Nom d’utilisateur (pseudo) — optionnel</label>
+          <input id="usernameInput" placeholder="ex: toto (optionnel)" />
         </div>
-        <div id="usernamePromptStatus" class="error" style="display:none;"></div>
+
+        <div class="row">
+          <div class="field">
+            <label class="muted">Prénom — optionnel</label>
+            <input id="firstNameInput" placeholder="Prénom (optionnel)" />
+          </div>
+          <div class="field">
+            <label class="muted">Nom — optionnel</label>
+            <input id="lastNameInput" placeholder="Nom (optionnel)" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button id="btnSendOtp">Recevoir le code</button>
+        </div>
+
+        <div id="otpRequestStatus" class="muted" style="margin-top:10px;"></div>
+        <div class="muted" style="margin-top:10px;">
+          Astuce : Supabase limite les demandes. Si tu cliques trop vite → “rate limit”.
+        </div>
+
+        <div class="field">
+          <button id="btnForgot" class="secondary" type="button">Mot de passe oublié</button>
+        </div>
       </div>
+
+      <div id="stepVerifyOtp" class="panel hide">
+        <div class="sectionTitle" style="margin-top:0;">2) Entrer le code</div>
+
+        <div class="field">
+          <label>Code OTP (6 chiffres)</label>
+          <input id="otpToken" inputmode="numeric" placeholder="123456" />
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button id="btnVerifyOtp" class="smallBtn">Connexion / Valider</button>
+          <button id="btnResendOtp" class="secondary smallBtn" type="button">Renvoyer</button>
+        </div>
+
+        <div id="otpVerifyStatus" class="muted" style="margin-top:10px;"></div>
+
+        <div class="muted" style="margin-top:10px;">
+          Après validation, tu peux poster directement (images/vidéos), liker et commenter.
+        </div>
+      </div>
+
+      <div id="stepResetPassword" class="panel hide">
+        <div class="sectionTitle" style="margin-top:0;">Mot de passe oublié</div>
+        <div class="field">
+          <label>Email</label>
+          <input id="resetEmail" type="email" placeholder="email@exemple.com" />
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <button id="btnSendReset" class="smallBtn">Envoyer</button>
+          <button id="btnBackToOtp" class="ghost smallBtn" type="button">Retour</button>
+        </div>
+        <div id="resetStatus" class="muted" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="sectionTitle" style="margin-top:18px;">3) Publier</div>
+
+      <div class="panel">
+        <div class="field">
+          <label>Caption (optionnel)</label>
+          <textarea id="caption" placeholder="Écris une description..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Image ou vidéo</label>
+          <input id="mediaFile" type="file" accept="image/*,video/*" />
+        </div>
+
+        <button id="btnPublish" style="margin-top:12px;">Publier</button>
+        <div id="publishStatus" class="muted" style="margin-top:10px;"></div>
+      </div>
+
+      <div id="authBanner" class="panel" style="display:none;">
+        <div class="sectionTitle" style="margin-top:0;">Connecté ✅</div>
+        <div id="authSummary" class="muted"></div>
+        <div class="row" style="margin-top:10px;">
+          <button id="btnLogout" class="secondary smallBtn" type="button">Déconnexion</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: FEED -->
+    <div>
+      <h1>Publications</h1>
+      <div id="posts" style="display:flex; flex-direction:column; gap:16px;"></div>
     </div>
   </div>
 
-  <div>
-    <h1>Publications</h1>
-    <div id="posts" class="grid" style="margin-top:8px;"></div>
-  </div>
-</div>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-<script type="module">
-  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-  
-  // === À REMPLACER ===
-  const SUPABASE_URL = "https://wtsmekozfpeaixqobuik.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0c21la296ZnBlYWl4cW9idWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Mjk2MjcsImV4cCI6MjA5MzQwNTYyN30.AUm9renaVr3A8pzDNx5Dm_f4XJrhkIKlnUePm6Gl5S0";
-  // === Fin ===
-  
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true }
-  });
-  
-  const postsEl = document.getElementById("posts");
-  const statusEl = document.getElementById("status");
-  const usernamePrompt = document.getElementById("usernamePrompt");
-  const usernameInput = document.getElementById("usernameInput");
-  const btnSaveUsername = document.getElementById("btnSaveUsername");
-  const usernamePromptStatus = document.getElementById("usernamePromptStatus");
-  
-  function showStatus(msg, type = "ok") {
-    statusEl.className = type === "error" ? "error" : "ok";
-    statusEl.textContent = msg;
-  }
-  
-  function detectMediaType(file) {
-    if (!file) return null;
-    if (file.type.startsWith("image/")) return "image";
-    if (file.type.startsWith("video/")) return "video";
-    return null;
-  }
-  
-  async function uploadToStorage(file) {
-    const mediaType = detectMediaType(file);
-    if (!mediaType) throw new Error("Type média non supporté.");
-    const bucket = "media";
-    const ext = file.name.includes(".") ? file.name.split(".").pop() : (mediaType === "image" ? "jpg" : "mp4");
-    const path = `public/${crypto.randomUUID()}.${ext}`;
-    const { error: uploadErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
-    if (uploadErr) throw uploadErr;
-    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-    return { url: pub.publicUrl, mediaType };
-  }
-  
-  async function getUsernameForCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("username")
-      .eq("id", user.id)
-      .single();
-    if (error) return null;
-    return data?.username ?? null;
-  }
-  
-  async function ensureUsername() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      usernamePrompt.style.display = "none";
-      return { user: null, username: null };
+    // ====== À REMPLACER ======
+    const SUPABASE_URL = "https://wtsmekozfpeaixqobuik.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0c21la296ZnBlYWl4cW9idWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Mjk2MjcsImV4cCI6MjA5MzQwNTYyN30.AUm9renaVr3A8pzDNx5Dm_f4XJrhkIKlnUePm6Gl5S0";
+    // ==========================
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true }
+    });
+
+    const el = (id) => document.getElementById(id);
+
+    const postsEl = el("posts");
+    const authBanner = el("authBanner");
+    const authSummary = el("authSummary");
+
+    const stepRequestOtp = el("stepRequestOtp");
+    const stepVerifyOtp = el("stepVerifyOtp");
+    const stepResetPassword = el("stepResetPassword");
+
+    const emailInput = el("email");
+    const usernameInput = el("usernameInput");
+    const firstNameInput = el("firstNameInput");
+    const lastNameInput = el("lastNameInput");
+
+    const otpTokenInput = el("otpToken");
+    const otpRequestStatus = el("otpRequestStatus");
+    const otpVerifyStatus = el("otpVerifyStatus");
+
+    const btnSendOtp = el("btnSendOtp");
+    const btnResendOtp = el("btnResendOtp");
+    const btnVerifyOtp = el("btnVerifyOtp");
+    const btnForgot = el("btnForgot");
+    const btnSendReset = el("btnSendReset");
+    const btnBackToOtp = el("btnBackToOtp");
+
+    const resetEmail = el("resetEmail");
+    const resetStatus = el("resetStatus");
+
+    const btnPublish = el("btnPublish");
+    const publishStatus = el("publishStatus");
+
+    const btnLogout = el("btnLogout");
+
+    const captionEl = el("caption");
+    const mediaFileEl = el("mediaFile");
+
+    let lastOtpRequestAt = 0;
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
     }
-    const username = await getUsernameForCurrentUser();
-    if (!username) {
-      usernamePromptStatus.style.display = "none";
-      usernameInput.value = "";
-      usernamePrompt.style.display = "block";
-      return { user, username: null };
+
+    function detectMediaType(file) {
+      if (!file) return null;
+      if (file.type.startsWith("image/")) return "image";
+      if (file.type.startsWith("video/")) return "video";
+      return null;
     }
-    usernamePrompt.style.display = "none";
-    return { user, username };
-  }
-  
-  btnSaveUsername.addEventListener("click", async () => {
-    usernamePromptStatus.style.display = "none";
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return showStatus("Connecte-toi d'abord.", "error");
-    const uname = (usernameInput.value || "").trim();
-    if (!uname) {
-      usernamePromptStatus.textContent = "Username requis.";
-      usernamePromptStatus.style.display = "block";
-      return;
+
+    async function uploadToStorage(file) {
+      const mediaType = detectMediaType(file);
+      if (!mediaType) throw new Error("Type média non supporté (image/vidéo uniquement).");
+
+      const bucket = "media";
+      const ext = file.name.includes(".") ? file.name.split(".").pop() : (mediaType === "image" ? "jpg" : "mp4");
+      const path = `public/${crypto.randomUUID()}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
+      if (uploadErr) throw uploadErr;
+
+      const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+      return { url: pub.publicUrl, mediaType };
     }
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({ id: user.id, username: uname });
-    if (error) {
-      usernamePromptStatus.textContent = error.message || "Erreur lors de la sauvegarde du username.";
-      usernamePromptStatus.style.display = "block";
-      return;
-    }
-    showStatus("Username sauvegardé ✅");
-    usernamePrompt.style.display = "none";
-    await loadPosts();
-  });
-  
-  async function loadPosts() {
-    postsEl.innerHTML = "";
-    const { data: posts, error } = await supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    
-    const ids = posts.map(p => p.id);
-    let likesMap = {};
-    if (ids.length) {
-      const { data: likes, error: likesErr } = await supabase
-        .from("likes")
-        .select("post_id");
-      if (likesErr) throw likesErr;
-      likesMap = likes.reduce((acc, l) => {
-        acc[l.post_id] = (acc[l.post_id] || 0) + 1;
-        return acc;
-      }, {});
-    }
-    
-    for (const p of posts) {
-      const likesCount = likesMap[p.id] || 0;
-      const name = p.user_name || "Utilisateur";
-      const postDiv = document.createElement("div");
-      postDiv.className = "post";
-      postDiv.innerHTML = `
-        <div class="meta">
-          <b>${escapeHtml(name)}</b> • ${new Date(p.created_at).toLocaleString()}
-        </div>
-        ${p.caption ? `<div style="margin-bottom:10px; font-weight:600;">${escapeHtml(p.caption)}</div>` : ""}
-        ${p.media_url ? `
-          <div class="media">
-            ${p.media_type === "video"
-              ? `<video src="${p.media_url}" controls playsinline></video>`
-              : `<img src="${p.media_url}" alt="media" />`
-            }
-          </div>
-        ` : ""}
-        <div class="actions">
-          <button class="secondary" data-like="${p.id}">❤️ Like</button>
-          <span class="pill">${likesCount} likes</span>
-        </div>
-        <div class="comment">
-          <div style="display:flex;gap:10px;">
-            <input placeholder="Écrire un commentaire..." data-comment-input="${p.id}" style="padding:10px;">
-            <button data-comment-send="${p.id}" style="width:auto; padding:10px 14px;">Envoyer</button>
-          </div>
-          <div data-comments-list="${p.id}" style="margin-top:12px;"></div>
-        </div>
-      `;
-      postsEl.appendChild(postDiv);
-      await loadCommentsForPost(p.id, postDiv.querySelector(`[data-comments-list="${p.id}"]`));
-    }
-    
-    postsEl.querySelectorAll("[data-like]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const postId = btn.getAttribute("data-like");
-        await likePost(postId);
-        await loadPosts();
+
+    async function getOrCreateProfile(email, userId) {
+      // Remplit profile avec ce que l’utilisateur a saisi (pseudo/prénom/nom).
+      // Si rien rempli, on utilise email (ou fallback).
+      const username = (usernameInput.value || "").trim();
+      const firstName = (firstNameInput.value || "").trim();
+      const lastName = (lastNameInput.value || "").trim();
+
+      const displayUsername =
+        username ||
+        `${firstName ? firstName : ""}${firstName && lastName ? " " : ""}${lastName ? lastName : ""}`.trim() ||
+        email ||
+        "Utilisateur";
+
+      // upsert profiles : id = user id
+      const { error } = await supabase.from("profiles").upsert({
+        id: userId,
+        email: email,
+        username: displayUsername,
+        first_name: firstName || null,
+        last_name: lastName || null
       });
-    });
-    
-    postsEl.querySelectorAll("[data-comment-send]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const postId = btn.getAttribute("data-comment-send");
-        const input = postsEl.querySelector(`[data-comment-input="${postId}"]`);
-        const text = (input?.value || "").trim();
-        if (!text) return;
-        await addComment(postId, text);
-        await loadPosts();
-      });
-    });
-  }
-  
-  async function loadCommentsForPost(postId, container) {
-    container.innerHTML = "";
-    const { data, error } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("post_id", postId)
-      .order("created_at", { ascending: true });
-    if (error) throw error;
-    
-    for (const c of data) {
-      const el = document.createElement("div");
-      el.style.marginBottom = "10px";
-      el.innerHTML = `
-        <p style="font-weight:650;">${escapeHtml(c.user_name || "Utilisateur")}: ${escapeHtml(c.content)}</p>
-        <small>${new Date(c.created_at).toLocaleString()}</small>
-      `;
-      container.appendChild(el);
+
+      if (error) throw error;
+      return displayUsername;
     }
-  }
-  
-  async function likePost(postId) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Connecte-toi d'abord.");
-    const { error } = await supabase
-      .from("likes")
-      .insert({ post_id: postId, user_id: user.id });
-    if (error && !String(error.message || "").toLowerCase().includes("duplicate")) throw error;
-  }
-  
-  async function addComment(postId, content) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Connecte-toi d'abord.");
-    const username = await getUsernameForCurrentUser() || user.email || "Utilisateur";
-    const { error } = await supabase.from("comments").insert({
-      post_id: postId,
-      user_id: user.id,
-      user_name: username,
-      content
+
+    async function getProfileUsername(userId) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", userId)
+        .single();
+
+      if (error) return null;
+      return data?.username || null;
+    }
+
+    function setAuthView(connected) {
+      authBanner.style.display = connected ? "block" : "none";
+    }
+
+    function setStep(step) {
+      stepRequestOtp.classList.toggle("hide", step !== "request");
+      stepVerifyOtp.classList.toggle("hide", step !== "verify");
+      stepResetPassword.classList.toggle("hide", step !== "reset");
+    }
+
+    // -------------- OTP REQUEST --------------
+    async function sendOtp(forEmail) {
+      const now = Date.now();
+      const COOLDOWN_MS = 60000; // prudent: évite re-clic et limite Supabase
+      if (now - lastOtpRequestAt < COOLDOWN_MS) {
+        const left = Math.ceil((COOLDOWN_MS - (now - lastOtpRequestAt))/1000);
+        throw new Error(`Attends ${left}s avant de renvoyer un OTP.`);
+      }
+
+      lastOtpRequestAt = now;
+
+      // redirect sans URL à saisir dans l’UI
+      const redirectTo = window.location.origin + window.location.pathname;
+
+      otpRequestStatus.textContent = "Envoi du code OTP...";
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: forEmail,
+        options: { emailRedirectTo: redirectTo }
+      });
+
+      if (error) throw error;
+      return true;
+    }
+
+    btnSendOtp.addEventListener("click", async () => {
+      try {
+        otpRequestStatus.className = "muted";
+        otpVerifyStatus.textContent = "";
+        publishStatus.textContent = "";
+
+        const email = (emailInput.value || "").trim();
+        if (!email) throw new Error("Entre un email.");
+
+        btnSendOtp.disabled = true;
+
+        await sendOtp(email);
+        setStep("verify");
+
+        otpVerifyStatus.className = "ok";
+        otpVerifyStatus.textContent = "Code envoyé ✅. Vérifie tes emails et entre le code.";
+      } catch (e) {
+        otpRequestStatus.className = "error";
+        otpRequestStatus.textContent = (e?.message || String(e));
+      } finally {
+        btnSendOtp.disabled = false;
+      }
     });
-    if (error) throw error;
-  }
-  
-  function escapeHtml(str) {
-    return String(str ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-  
-  // Connexion OTP
-  document.getElementById("btnSignIn").addEventListener("click", async () => {
-    const email = document.getElementById("email").value.trim();
-    const redirectTo = document.getElementById("redirect").value.trim() || window.location.origin;
-    if (!email) return showStatus("Entre un email.", "error");
-    showStatus("Envoi du lien de connexion...");
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirectTo }
-    });
-    if (error) return showStatus(error.message, "error");
-    showStatus("Vérifie ta boîte mail et clique sur le lien.");
-  });
-  
-  // Publier
-  document.getElementById("btnPublish").addEventListener("click", async () => {
-    try {
-      const caption = document.getElementById("caption").value.trim();
-      const file = document.getElementById("mediaFile").files[0];
-      if (!file) return showStatus("Choisis une image ou vidéo.", "error");
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Connecte-toi d'abord.");
-      
-      const { username } = await ensureUsername();
-      if (!username) {
-        showStatus("Choisis ton username d'abord.", "error");
+
+    btnResendOtp.addEventListener("click", async () => {
+      const email = (emailInput.value || "").trim();
+      if (!email) {
+        otpVerifyStatus.className = "error";
+        otpVerifyStatus.textContent = "Entre d’abord un email.";
         return;
       }
-      
-      showStatus("Upload en cours...");
+
+      try {
+        btnResendOtp.disabled = true;
+        otpVerifyStatus.className = "muted";
+        otpVerifyStatus.textContent = "Renvoyer un OTP...";
+
+        await sendOtp(email);
+        otpVerifyStatus.className = "ok";
+        otpVerifyStatus.textContent = "Nouveau code envoyé ✅";
+      } catch (e) {
+        otpVerifyStatus.className = "error";
+        otpVerifyStatus.textContent = (e?.message || String(e));
+      } finally {
+        btnResendOtp.disabled = false;
+      }
+    });
+
+    // -------------- OTP VERIFY --------------
+    btnVerifyOtp.addEventListener("click", async () => {
+      try {
+        otpVerifyStatus.className = "muted";
+
+        const token = (otpTokenInput.value || "").trim();
+        const email = (emailInput.value || "").trim();
+
+        if (!email) throw new Error("Email manquant.");
+        if (!token) throw new Error("Entre le code OTP (6 chiffres).");
+
+        btnVerifyOtp.disabled = true;
+
+        otpVerifyStatus.textContent = "Vérification du code...";
+
+        const { data: { session }, error } = await supabase.auth.verifyOtp({
+          type: "email",
+          email,
+          token
+        });
+
+        if (error) throw error;
+        if (!session) throw new Error("Session non créée. Réessaie.");
+
+        otpVerifyStatus.className = "ok";
+        otpVerifyStatus.textContent = "Connecté ✅";
+
+        // une fois connecté : user_id + email => profiles
+        const user = (await supabase.auth.getUser()).data.user;
+        if (!user) throw new Error("User introuvable après validation.");
+
+        await getOrCreateProfile(email, user.id);
+
+        // reset UI
+        otpTokenInput.value = "";
+        setStep("request");
+
+        await refreshAuthUI();
+        await loadPosts();
+      } catch (e) {
+        otpVerifyStatus.className = "error";
+        otpVerifyStatus.textContent = (e?.message || String(e));
+      } finally {
+        btnVerifyOtp.disabled = false;
+      }
+    });
+
+    // -------------- FORGOT PASSWORD --------------
+    btnForgot.addEventListener("click", () => {
+      resetEmail.value = emailInput.value || "";
+      setStep("reset");
+      resetStatus.textContent = "";
+    });
+
+    btnBackToOtp.addEventListener("click", () => {
+      setStep("request");
+      resetStatus.textContent = "";
+    });
+
+    btnSendReset.addEventListener("click", async () => {
+      try {
+        const email = (resetEmail.value || "").trim();
+        if (!email) throw new Error("Entre un email.");
+
+        btnSendReset.disabled = true;
+        resetStatus.className = "muted";
+        resetStatus.textContent = "Envoi du lien de reset...";
+
+        // Redirect: il faut une URL de redirection configurée dans Supabase
+        const redirectTo = window.location.origin + window.location.pathname;
+
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo
+        });
+
+        if (error) throw error;
+
+        resetStatus.className = "ok";
+        resetStatus.textContent = "Lien envoyé ✅. Vérifie tes emails.";
+      } catch (e) {
+        resetStatus.className = "error";
+        resetStatus.textContent = (e?.message || String(e));
+      } finally {
+        btnSendReset.disabled = false;
+      }
+    });
+
+    // -------------- AUTH STATE --------------
+    async function refreshAuthUI() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setAuthView(false);
+        return;
+      }
+
+      const username = await getProfileUsername(user.id) || user.email || "Utilisateur";
+      authSummary.textContent = `Connecté en tant que ${username}`;
+      setAuthView(true);
+    }
+
+    btnLogout.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      setAuthView(false);
+      await loadPosts();
+      publishStatus.textContent = "Déconnecté.";
+    });
+
+    // -------------- POSTS --------------
+    async function loadCommentsForPost(postId, container) {
+      container.innerHTML = "";
+
+      const { data, error } = await supabase
+        .from("comments")
+        .select("*")
+        .eq("post_id", postId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      for (const c of data || []) {
+        const div = document.createElement("div");
+        div.style.marginBottom = "10px";
+        div.innerHTML = `
+          <div style="font-weight:850;">${escapeHtml(c.user_name || "Utilisateur")} :</div>
+          <div>${escapeHtml(c.content || "")}</div>
+          <small class="muted">${new Date(c.created_at).toLocaleString()}</small>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    async function likePost(postId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Connecte-toi d’abord.");
+
+      const { error } = await supabase
+        .from("likes")
+        .insert({ post_id: postId, user_id: user.id });
+
+      // Si contrainte unique, tu peux ignorer l’erreur duplicate
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+        if (!msg.includes("duplicate") && !msg.includes("unique")) throw error;
+      }
+    }
+
+    async function addComment(postId, content) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Connecte-toi d’abord.");
+
+      const username = await getProfileUsername(user.id) || user.email || "Utilisateur";
+
+      const { error } = await supabase.from("comments").insert({
+        post_id: postId,
+        user_id: user.id,
+        user_name: username,
+        content
+      });
+
+      if (error) throw error;
+    }
+
+    async function uploadAndPublish() {
+      publishStatus.className = "muted";
+      publishStatus.textContent = "";
+
+      const caption = (captionEl.value || "").trim();
+      const file = mediaFileEl.files[0];
+      if (!file) throw new Error("Choisis une image ou une vidéo.");
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Connecte-toi d’abord.");
+
+      // Username via profile (on ne force pas l’édition ici)
+      const username = await getProfileUsername(user.id);
+      if (!username) throw new Error("Profil non trouvé. Connecte-toi puis renvoie le code (OTP) une fois.");
+
+      publishStatus.textContent = "Upload média...";
       const { url, mediaType } = await uploadToStorage(file);
+
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
         user_name: username,
@@ -338,31 +537,129 @@
         media_url: url,
         media_type: mediaType
       });
-      if (error) throw error;
-      
-      showStatus("Publié ✅");
-      document.getElementById("caption").value = "";
-      document.getElementById("mediaFile").value = "";
-      await loadPosts();
-    } catch (e) {
-      showStatus(e.message || String(e), "error");
-    }
-  });
-  
-  // Initial load
-  supabase.auth.getSession().then(async () => {
-    await ensureUsername();
-    await loadPosts();
-  }).catch(async () => {
-    usernamePrompt.style.display = "none";
-    await loadPosts();
-  });
-  
-  supabase.auth.onAuthStateChange(async () => {
-    await ensureUsername();
-    await loadPosts();
-  });
-</script>
 
+      if (error) throw error;
+
+      captionEl.value = "";
+      mediaFileEl.value = "";
+
+      publishStatus.className = "ok";
+      publishStatus.textContent = "Publié ✅";
+    }
+
+    btnPublish.addEventListener("click", async () => {
+      try {
+        btnPublish.disabled = true;
+        await uploadAndPublish();
+        await loadPosts();
+      } catch (e) {
+        publishStatus.className = "error";
+        publishStatus.textContent = (e?.message || String(e));
+      } finally {
+        btnPublish.disabled = false;
+      }
+    });
+
+    async function loadPosts() {
+      postsEl.innerHTML = "";
+
+      const { data: posts, error } = await supabase
+        .from("posts")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const ids = (posts || []).map(p => p.id);
+
+      let likesCountMap = {};
+      if (ids.length) {
+        // Count likes per post
+        const { data: likes, error: likesErr } = await supabase
+          .from("likes")
+          .select("post_id");
+
+        if (likesErr) throw likesErr;
+
+        likesCountMap = (likes || []).reduce((acc, l) => {
+          acc[l.post_id] = (acc[l.post_id] || 0) + 1;
+          return acc;
+        }, {});
+      }
+
+      for (const p of (posts || [])) {
+        const likesCount = likesCountMap[p.id] || 0;
+
+        const postDiv = document.createElement("div");
+        postDiv.className = "post";
+        postDiv.innerHTML = `
+          <div class="meta">
+            <b>${escapeHtml(p.user_name || "Utilisateur")}</b> • ${new Date(p.created_at).toLocaleString()}
+          </div>
+
+          ${p.caption ? `<div style="margin-bottom:10px; font-weight:800;">${escapeHtml(p.caption)}</div>` : ""}
+
+          ${p.media_url ? `
+            ${p.media_type === "video"
+              ? `<video src="${p.media_url}" controls playsinline></video>`
+              : `<img src="${p.media_url}" alt="media" />`
+            }
+          ` : ""}
+
+          <div class="actions">
+            <button class="secondary smallBtn" data-like="${p.id}">❤️ Like</button>
+            <span class="pill">${likesCount} likes</span>
+          </div>
+
+          <div class="comment">
+            <div class="row">
+              <input placeholder="Écrire un commentaire..." data-comment-input="${p.id}" />
+              <button class="smallBtn" data-comment-send="${p.id}">Envoyer</button>
+            </div>
+            <div style="margin-top:12px;" data-comments-list="${p.id}"></div>
+          </div>
+        `;
+
+        postsEl.appendChild(postDiv);
+
+        const commentsContainer = postDiv.querySelector(`[data-comments-list="${p.id}"]`);
+        await loadCommentsForPost(p.id, commentsContainer);
+
+        postDiv.querySelector(`[data-like="${p.id}"]`).addEventListener("click", async () => {
+          try {
+            await likePost(p.id);
+            await loadPosts();
+          } catch (e) {
+            alert(e?.message || String(e));
+          }
+        });
+
+        postDiv.querySelector(`[data-comment-send="${p.id}"]`).addEventListener("click", async () => {
+          const input = postDiv.querySelector(`[data-comment-input="${p.id}"]`);
+          const text = (input?.value || "").trim();
+          if (!text) return;
+
+          try {
+            await addComment(p.id, text);
+            await loadPosts();
+          } catch (e) {
+            alert(e?.message || String(e));
+          }
+        });
+      }
+    }
+
+    // init
+    supabase.auth.onAuthStateChange(async () => {
+      await refreshAuthUI();
+      await loadPosts();
+    });
+
+    (async () => {
+      setStep("request");
+      await refreshAuthUI();
+      await loadPosts();
+    })();
+  </script>
 </body>
 </html>
