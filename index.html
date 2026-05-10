@@ -19,7 +19,6 @@
       --shadow: 0 18px 60px rgba(0,0,0,.45);
       --radius: 16px;
     }
-
     * { box-sizing: border-box; }
     body{
       margin:0;
@@ -42,14 +41,12 @@
       justify-content: space-between;
       gap:12px;
     }
-
     .brand{
       display:flex; align-items:center; gap:12px;
       font-weight: 950;
       letter-spacing: .2px;
       font-size: 22px;
     }
-
     .badge{
       padding: 8px 12px;
       background: rgba(255,255,255,.06);
@@ -219,10 +216,7 @@
       display:block;
       background: rgba(255,255,255,.03);
     }
-
-    video{
-      object-fit: contain;
-    }
+    video{ object-fit: contain; }
 
     .actions{
       display:flex; gap:10px; align-items:center; flex-wrap: wrap;
@@ -239,7 +233,21 @@
       color: var(--muted);
     }
 
-    .likeBtn{ width:auto; padding: 10px 14px; }
+    .likeBtn{
+      width:auto;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.16);
+      color: var(--muted);
+      font-weight: 950;
+    }
+    .likeBtn.liked{
+      background: rgba(239,68,68,.18);
+      border-color: rgba(239,68,68,.55);
+      color: #ffd8d8;
+    }
+
     .commentBox{
       margin-top: 12px;
       padding-top: 12px;
@@ -276,19 +284,13 @@
 
     .hide{ display:none !important; }
     .spacer{ height:8px; }
-    
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: var(--muted);
-    }
-    
-    .error-msg {
-      color: #FF8A8A;
-      text-align: center;
-      padding: 20px;
-    }
+
+    .loading { text-align: center; padding: 40px; color: var(--muted); }
+    .error-msg { color: #FF8A8A; text-align: center; padding: 20px; }
   </style>
+
+  <!-- ✅ Important: charger Supabase AVANT ton script inline -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -392,182 +394,382 @@
   </div>
 
   <script>
-    // Attendre que le DOM soit chargé
     document.addEventListener('DOMContentLoaded', function() {
-    
-    // Configuration Supabase
-    const SUPABASE_URL = "https://wtsmekozfpeaixqobuik.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0c21la296ZnBlYWl4cW9idWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Mjk2MjcsImV4cCI6MjA5MzQwNTYyN30.AUm9renaVr3A8pzDNx5Dm_f4XJrhkIKlnUePm6Gl5S0";
-    
-    // Initialisation de Supabase
-    let supabase;
-    
-    try {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: { persistSession: true, autoRefreshToken: true }
-      });
-    } catch(e) {
-      console.error("Erreur chargement Supabase:", e);
-      document.getElementById('feed').innerHTML = '<div class="error-msg">⚠️ Erreur: Impossible de charger Supabase. Vérifie ta connexion internet.</div>';
-    }
-    
-    // Éléments DOM
-    const authBadge = document.getElementById("authBadge");
-    const feed = document.getElementById("feed");
-    
-    const signupForm = document.getElementById("signupForm");
-    const btnSignup = document.getElementById("btnSignup");
-    const signupMsg = document.getElementById("signupMsg");
-    
-    const btnLogin = document.getElementById("btnLogin");
-    const loginMsg = document.getElementById("loginMsg");
-    
-    const btnLogout = document.getElementById("btnLogout");
-    const btnReset = document.getElementById("btnReset");
-    
-    const afterAuth = document.getElementById("afterAuth");
-    const notAuth = document.getElementById("notAuth");
-    
-    const btnPublish = document.getElementById("btnPublish");
-    const pubMsg = document.getElementById("pubMsg");
-    
-    const captionEl = document.getElementById("caption");
-    const mediaFileEl = document.getElementById("mediaFile");
-    
-    const su_username = document.getElementById("su_username");
-    const su_first = document.getElementById("su_first");
-    const su_last = document.getElementById("su_last");
-    const su_email = document.getElementById("su_email");
-    const su_password = document.getElementById("su_password");
-    
-    const li_email = document.getElementById("li_email");
-    const li_password = document.getElementById("li_password");
-    
-    const redirectTo = window.location.href;
-    
-    // Fonctions utilitaires
-    function escapeHtml(s) {
-      if (!s) return "";
-      return String(s)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-    
-    function avatarLetter(username) {
-      const u = String(username || "").trim();
-      if (!u) return "•";
-      return u[0].toUpperCase();
-    }
-    
-    function fileMediaType(file) {
-      if (!file) return null;
-      if (file.type?.startsWith("image/")) return "image";
-      if (file.type?.startsWith("video/")) return "video";
-      return null;
-    }
-    
-    async function getMyProfile() {
-      if (!supabase) return null;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-    
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-    
-      if (error) return null;
-      return data;
-    }
-    
-    // Chargement du feed
-    async function loadFeed() {
-      if (!supabase) {
-        feed.innerHTML = '<div class="error-msg">⚠️ Erreur de connexion à Supabase</div>';
+      // ========= Supabase config =========
+      const SUPABASE_URL = "https://wtsmekozfpeaixqobuik.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0c21la296ZnBlYWl4cW9idWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Mjk2MjcsImV4cCI6MjA5MzQwNTYyN30.AUm9renaVr3A8pzDNx5Dm_f4XJrhkIKlnUePm6Gl5S0";
+
+      // ✅ URL fixe pour reset/magic link (GitHub Pages)
+      const redirectTo = "https://starconnect-intertainment.github.io/Shop-13/";
+
+      let supabase = null;
+      try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        });
+      } catch (e) {
+        console.error("Erreur chargement Supabase:", e);
+        document.getElementById('feed').innerHTML =
+          '<div class="error-msg">⚠️ Erreur: Impossible de charger Supabase.</div>';
         return;
       }
-      
-      feed.innerHTML = '<div class="loading">Chargement des publications...</div>';
-    
-      try {
-        const { data: posts, error } = await supabase
-          .from("posts")
+
+      // ========= DOM =========
+      const authBadge = document.getElementById("authBadge");
+      const feed = document.getElementById("feed");
+
+      const signupForm = document.getElementById("signupForm");
+      const btnSignup = document.getElementById("btnSignup");
+      const signupMsg = document.getElementById("signupMsg");
+
+      const btnLogin = document.getElementById("btnLogin");
+      const loginMsg = document.getElementById("loginMsg");
+
+      const btnLogout = document.getElementById("btnLogout");
+      const btnReset = document.getElementById("btnReset");
+
+      const afterAuth = document.getElementById("afterAuth");
+      const notAuth = document.getElementById("notAuth");
+
+      const btnPublish = document.getElementById("btnPublish");
+      const pubMsg = document.getElementById("pubMsg");
+
+      const captionEl = document.getElementById("caption");
+      const mediaFileEl = document.getElementById("mediaFile");
+
+      const su_username = document.getElementById("su_username");
+      const su_first = document.getElementById("su_first");
+      const su_last = document.getElementById("su_last");
+      const su_email = document.getElementById("su_email");
+      const su_password = document.getElementById("su_password");
+
+      const li_email = document.getElementById("li_email");
+      const li_password = document.getElementById("li_password");
+
+      // ========= Utils =========
+      function escapeHtml(s) {
+        if (!s) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function avatarLetter(username) {
+        const u = String(username || "").trim();
+        if (!u) return "•";
+        return u[0].toUpperCase();
+      }
+
+      function fileMediaType(file) {
+        if (!file) return null;
+        if (file.type?.startsWith("image/")) return "image";
+        if (file.type?.startsWith("video/")) return "video";
+        return null;
+      }
+
+      async function getMyProfile() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+
+        const { data, error } = await supabase
+          .from("profiles")
           .select("*")
-          .order("created_at", { ascending: false });
-    
-        if (error) throw error;
-    
-        if (!posts || posts.length === 0) {
-          feed.innerHTML = '<div class="post" style="text-align:center; color: var(--muted);">📭 Aucune publication pour le moment.</div>';
-          return;
+          .eq("id", user.id)
+          .single();
+
+        if (error) return null;
+        return data;
+      }
+
+      async function getSessionUser() {
+        const { data: { user } } = await supabase.auth.getUser();
+        return user || null;
+      }
+
+      // ========= Likes + Comments helpers =========
+      async function getLikeState(postId, userId) {
+        // Vérifie si l'utilisateur a liké
+        const { data, error } = await supabase
+          .from("likes")
+          .select("*")
+          .eq("post_id", postId)
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        // Si table/policy n'existe pas, on renvoie false (pour ne pas casser l'affichage du feed)
+        if (error) return { liked: false, count: 0, error };
+        return { liked: !!data, count: 0 };
+      }
+
+      async function countLikes(postId) {
+        const { count, error } = await supabase
+          .from("likes")
+          .select("*", { count: "exact", head: true })
+          .eq("post_id", postId);
+
+        if (error) return 0;
+        return count || 0;
+      }
+
+      async function loadComments(postId, limit = 50) {
+        const { data, error } = await supabase
+          .from("comments")
+          .select("id, user_username, text, created_at")
+          .eq("post_id", postId)
+          .order("created_at", { ascending: true })
+          .limit(limit);
+
+        if (error) return [];
+        return data || [];
+      }
+
+      async function toggleLike(postId) {
+        const user = await getSessionUser();
+        if (!user) throw new Error("Connecte-toi pour liker.");
+
+        // check existence
+        const { data: existing, error: selErr } = await supabase
+          .from("likes")
+          .select("post_id")
+          .eq("post_id", postId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (selErr) throw selErr;
+
+        if (existing) {
+          // unlike
+          const { error } = await supabase
+            .from("likes")
+            .delete()
+            .eq("post_id", postId)
+            .eq("user_id", user.id);
+
+          if (error) throw error;
+          return { liked: false };
+        } else {
+          // like
+          const { error } = await supabase
+            .from("likes")
+            .insert({ post_id: postId, user_id: user.id });
+
+          if (error) throw error;
+          return { liked: true };
         }
-    
-        feed.innerHTML = "";
-    
-        for (const p of posts) {
-          const card = document.createElement("div");
-          card.className = "post";
-    
-          const mediaHtml = p.media_url
-            ? (p.media_type === "video"
+      }
+
+      async function addComment(postId, text) {
+        const user = await getSessionUser();
+        if (!user) throw new Error("Connecte-toi pour commenter.");
+
+        const clean = (text || "").trim();
+        if (!clean) throw new Error("Écris un commentaire.");
+
+        const profile = await getMyProfile();
+        const user_username = profile?.username || user.email;
+
+        const { error } = await supabase
+          .from("comments")
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            user_username,
+            text: clean
+          });
+
+        if (error) throw error;
+        return true;
+      }
+
+      // ========= Feed =========
+      async function loadFeed() {
+        feed.innerHTML = '<div class="loading">Chargement des publications...</div>';
+
+        try {
+          const { data: posts, error } = await supabase
+            .from("posts")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+          if (error) throw error;
+
+          if (!posts || posts.length === 0) {
+            feed.innerHTML =
+              '<div class="post" style="text-align:center; color: var(--muted);">📭 Aucune publication pour le moment.</div>';
+            return;
+          }
+
+          const user = await getSessionUser();
+          const userId = user?.id || null;
+
+          feed.innerHTML = "";
+
+          // Render posts
+          for (const p of posts) {
+            const card = document.createElement("div");
+            card.className = "post";
+
+            const timeStr = p.created_at ? new Date(p.created_at).toLocaleString() : "";
+            const username = p.user_username || "Utilisateur";
+
+            const mediaHtml = p.media_url
+              ? (p.media_type === "video"
                 ? `<video src="${escapeHtml(p.media_url)}" controls playsinline></video>`
                 : `<img src="${escapeHtml(p.media_url)}" alt="media" loading="lazy" />`)
-            : "";
-    
-          const timeStr = p.created_at ? new Date(p.created_at).toLocaleString() : "";
-          const username = p.user_username || "Utilisateur";
-          
-          card.innerHTML = `
-            <div class="meta">
-              <div class="author">
-                <div class="avatar">${escapeHtml(avatarLetter(username))}</div>
-                <div>${escapeHtml(username)}</div>
+              : "";
+
+            // Valeurs initiales (seront mises à jour)
+            const likesCountElId = `likesCount-${p.id}`;
+            const likeBtnId = `likeBtn-${p.id}`;
+            const commentsBoxId = `comments-${p.id}`;
+            const commentInputId = `commentInput-${p.id}`;
+
+            card.innerHTML = `
+              <div class="meta">
+                <div class="author">
+                  <div class="avatar">${escapeHtml(avatarLetter(username))}</div>
+                  <div>${escapeHtml(username)}</div>
+                </div>
+                <div class="time">${escapeHtml(timeStr)}</div>
               </div>
-              <div class="time">${escapeHtml(timeStr)}</div>
-            </div>
-            ${p.caption ? `<div class="caption">${escapeHtml(p.caption)}</div>` : ""}
-            ${mediaHtml}
-            <div class="actions">
-              <div class="pill">❤️ ${Math.floor(Math.random() * 50)} likes</div>
-            </div>
-          `;
-    
-          feed.appendChild(card);
+
+              ${p.caption ? `<div class="caption">${escapeHtml(p.caption)}</div>` : ""}
+
+              ${mediaHtml}
+
+              <div class="actions">
+                <button class="likeBtn" id="${likeBtnId}" data-post-id="${escapeHtml(p.id)}" type="button">
+                  ❤️ <span id="${likesCountElId}">...</span>
+                </button>
+              </div>
+
+              <div class="commentBox">
+                <div class="commentRow">
+                  <input id="${commentInputId}" placeholder="${user ? 'Écrire un commentaire...' : 'Connecte-toi pour commenter'}" ${user ? '' : 'disabled'} />
+                  <button class="btn-secondary" type="button" id="btnComment-${p.id}" ${user ? '' : 'disabled'} style="flex:0 0 auto; width:auto; padding:10px 14px;">
+                    Envoyer
+                  </button>
+                </div>
+
+                <div id="${commentsBoxId}"></div>
+              </div>
+            `;
+
+            feed.appendChild(card);
+
+            // Attacher handlers
+            const likeBtn = document.getElementById(likeBtnId);
+            likeBtn.addEventListener("click", async () => {
+              try {
+                await toggleLike(p.id);
+
+                // refresh likes + btn state (simple)
+                const count = await countLikes(p.id);
+                document.getElementById(likesCountElId).textContent = String(count);
+
+                if (userId) {
+                  const { liked } = await getLikeState(p.id, userId);
+                  likeBtn.classList.toggle("liked", !!liked);
+                }
+              } catch (e) {
+                alert(e?.message || String(e));
+              }
+            });
+
+            const btnComment = document.getElementById(`btnComment-${p.id}`);
+            btnComment.addEventListener("click", async () => {
+              try {
+                const input = document.getElementById(commentInputId);
+                const text = input.value;
+
+                await addComment(p.id, text);
+                input.value = "";
+
+                const comments = await loadComments(p.id);
+                const commentsBox = document.getElementById(commentsBoxId);
+                commentsBox.innerHTML = comments.length
+                  ? comments.map(c => `
+                    <div class="commentItem">
+                      <div class="u">${escapeHtml(c.user_username || 'Utilisateur')}</div>
+                      <div class="c">${escapeHtml(c.text)}</div>
+                      <div class="t">${c.created_at ? escapeHtml(new Date(c.created_at).toLocaleString()) : ''}</div>
+                    </div>
+                  `).join("")
+                  : `<div style="color:var(--muted); font-weight:850; margin-top:10px;">Pas encore de commentaires.</div>`;
+              } catch (e) {
+                alert(e?.message || String(e));
+              }
+            });
+
+            // Charger likes + commentaires en arrière-plan
+            (async () => {
+              try {
+                const count = await countLikes(p.id);
+                document.getElementById(likesCountElId).textContent = String(count);
+
+                if (userId) {
+                  const { liked } = await getLikeState(p.id, userId);
+                  likeBtn.classList.toggle("liked", !!liked);
+                }
+
+                const comments = await loadComments(p.id);
+                const commentsBox = document.getElementById(commentsBoxId);
+                commentsBox.innerHTML = comments.length
+                  ? comments.map(c => `
+                    <div class="commentItem">
+                      <div class="u">${escapeHtml(c.user_username || 'Utilisateur')}</div>
+                      <div class="c">${escapeHtml(c.text)}</div>
+                      <div class="t">${c.created_at ? escapeHtml(new Date(c.created_at).toLocaleString()) : ''}</div>
+                    </div>
+                  `).join("")
+                  : `<div style="color:var(--muted); font-weight:850; margin-top:10px;">Pas encore de commentaires.</div>`;
+              } catch (err) {
+                console.warn("Extras (likes/comments) failed:", err);
+                // On ne casse pas le feed si likes/comments ne passent pas
+              }
+            })();
+          }
+        } catch (error) {
+          console.error("Erreur chargement feed:", error);
+          feed.innerHTML = `<div class="error-msg">⚠️ Erreur: ${escapeHtml(error.message || String(error))}</div>`;
         }
-      } catch(error) {
-        console.error("Erreur chargement feed:", error);
-        feed.innerHTML = `<div class="error-msg">⚠️ Erreur: ${error.message}</div>`;
       }
-    }
-    
-    // Inscription
-    if (btnSignup) {
-      btnSignup.addEventListener("click", async () => {
-        if (!supabase) {
-          signupMsg.className = "msg err";
-          signupMsg.textContent = "Erreur de connexion à Supabase";
-          return;
+
+      // ========= Auth UI =========
+      function setLoggedUI(isLogged) {
+        if (isLogged) {
+          signupForm.classList.add("hide");
+          afterAuth.classList.remove("hide");
+          notAuth.classList.add("hide");
+          btnLogout.classList.remove("hide");
+        } else {
+          signupForm.classList.remove("hide");
+          afterAuth.classList.add("hide");
+          notAuth.classList.remove("hide");
+          btnLogout.classList.add("hide");
         }
-        
-        const username = su_username.value.trim();
-        const first_name = su_first.value.trim();
-        const last_name = su_last.value.trim();
-        const email = su_email.value.trim();
-        const password = su_password.value;
-    
-        if (!username) { signupMsg.className="msg err"; signupMsg.textContent="Username requis."; return; }
-        if (!email) { signupMsg.className="msg err"; signupMsg.textContent="Email requis."; return; }
-        if (!password) { signupMsg.className="msg err"; signupMsg.textContent="Mot de passe requis."; return; }
-        if (password.length < 6) { signupMsg.className="msg err"; signupMsg.textContent="Mot de passe min 6 caractères."; return; }
-    
-        signupMsg.className = "msg muted";
-        signupMsg.textContent = "Création du compte...";
-    
+      }
+
+      // ========= Signup =========
+      btnSignup.addEventListener("click", async () => {
         try{
+          const username = su_username.value.trim();
+          const first_name = su_first.value.trim();
+          const last_name = su_last.value.trim();
+          const email = su_email.value.trim();
+          const password = su_password.value;
+
+          if (!username) { signupMsg.className="msg err"; signupMsg.textContent="Username requis."; return; }
+          if (!email) { signupMsg.className="msg err"; signupMsg.textContent="Email requis."; return; }
+          if (!password) { signupMsg.className="msg err"; signupMsg.textContent="Mot de passe requis."; return; }
+          if (password.length < 6) { signupMsg.className="msg err"; signupMsg.textContent="Mot de passe min 6 caractères."; return; }
+
+          signupMsg.className = "msg muted";
+          signupMsg.textContent = "Création du compte...";
+
           const { error } = await supabase.auth.signUp({
             email,
             password,
@@ -579,8 +781,9 @@
               }
             }
           });
+
           if (error) throw error;
-    
+
           signupMsg.className = "msg ok";
           signupMsg.textContent = "Compte créé ✅ Vérifie tes emails.";
         }catch(e){
@@ -588,77 +791,49 @@
           signupMsg.textContent = e?.message || String(e);
         }
       });
-    }
-    
-    // Connexion
-    if (btnLogin) {
+
+      // ========= Login =========
       btnLogin.addEventListener("click", async () => {
-        if (!supabase) {
-          loginMsg.className = "msg err";
-          loginMsg.textContent = "Erreur de connexion à Supabase";
-          return;
-        }
-        
-        loginMsg.className = "msg muted";
-        loginMsg.textContent = "Connexion...";
-    
-        const email = li_email.value.trim();
-        const password = li_password.value;
-    
         try{
+          loginMsg.className = "msg muted";
+          loginMsg.textContent = "Connexion...";
+
+          const email = li_email.value.trim();
+          const password = li_password.value;
+
           if (!email) throw new Error("Email requis.");
           if (!password) throw new Error("Mot de passe requis.");
-    
+
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
-    
+
           const profile = await getMyProfile();
           authBadge.textContent = `Connecté : ${profile?.username || email}`;
-    
+
           loginMsg.className = "msg ok";
           loginMsg.textContent = "Connecté ✅";
-    
-          signupForm.classList.add("hide");
-          afterAuth.classList.remove("hide");
-          notAuth.classList.add("hide");
-          btnLogout.classList.remove("hide");
-    
-          alert("Connexion réussie ! (Les fonctionnalités avancées sont en cours d'activation)");
+          setLoggedUI(true);
+
+          alert("Connexion réussie !");
         }catch(e){
           loginMsg.className = "msg err";
           loginMsg.textContent = e?.message || String(e);
         }
       });
-    }
-    
-    // Déconnexion
-    if (btnLogout) {
+
+      // ========= Logout =========
       btnLogout.addEventListener("click", async () => {
-        if (supabase) {
-          await supabase.auth.signOut();
-        }
+        await supabase.auth.signOut();
         authBadge.textContent = "Connecte-toi pour interagir";
-    
-        signupForm.classList.remove("hide");
-        afterAuth.classList.add("hide");
-        notAuth.classList.remove("hide");
-        btnLogout.classList.add("hide");
-    
+        setLoggedUI(false);
         loadFeed();
       });
-    }
-    
-    // Reset password
-    if (btnReset) {
+
+      // ========= Reset password =========
       btnReset.addEventListener("click", async () => {
-        if (!supabase) {
-          alert("Erreur de connexion à Supabase");
-          return;
-        }
-        
         const email = (li_email.value || su_email.value || "").trim();
         if (!email) return alert("Entre d’abord ton email.");
-    
+
         try{
           const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
           if (error) throw error;
@@ -667,51 +842,43 @@
           alert(e?.message || String(e));
         }
       });
-    }
-    
-    // Publication
-    if (btnPublish) {
+
+      // ========= Publish =========
       btnPublish.addEventListener("click", async () => {
-        if (!supabase) {
-          pubMsg.className = "msg err";
-          pubMsg.textContent = "Erreur de connexion à Supabase";
-          return;
-        }
-        
-        pubMsg.className = "msg muted";
-        pubMsg.textContent = "";
-    
         try{
+          pubMsg.className = "msg muted";
+          pubMsg.textContent = "";
+
           const file = mediaFileEl.files[0];
           const caption = (captionEl.value || "").trim();
-    
+
           if (!file) throw new Error("Choisis une image ou une vidéo.");
-    
+
           const mediaType = fileMediaType(file);
           if (!mediaType) throw new Error("Type média non supporté.");
-    
-          const { data: { user } } = await supabase.auth.getUser();
+
+          const user = await getSessionUser();
           if (!user) throw new Error("Connecte-toi d’abord.");
-    
+
           const profile = await getMyProfile();
           if (!profile?.username) throw new Error("Profil incomplet.");
-    
+
           pubMsg.textContent = "Upload média...";
-    
+
           const bucket = "media";
-          const ext = file.name.split('.').pop() || (mediaType === "image" ? "jpg" : "mp4");
+          const ext = (file.name.split('.').pop() || (mediaType === "image" ? "jpg" : "mp4")).toLowerCase();
           const uid = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
           const path = `public/${user.id}/${uid}.${ext}`;
-    
+
           const { error: upErr } = await supabase.storage
             .from(bucket)
             .upload(path, file, { upsert: false });
-    
+
           if (upErr) throw upErr;
-    
+
           const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
           const publicUrl = urlData.publicUrl;
-    
+
           const { error: insErr } = await supabase.from("posts").insert({
             user_id: user.id,
             user_username: profile.username,
@@ -719,65 +886,50 @@
             media_url: publicUrl,
             media_type: mediaType
           });
-    
+
           if (insErr) throw insErr;
-    
+
           captionEl.value = "";
           mediaFileEl.value = "";
           pubMsg.className = "msg ok";
           pubMsg.textContent = "Publié ✅";
-    
+
           loadFeed();
         }catch(e){
           pubMsg.className = "msg err";
           pubMsg.textContent = e?.message || String(e);
         }
       });
-    }
-    
-    // État de l'auth
-    if (supabase) {
+
+      // ========= Auth state =========
       supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
-          btnLogout.classList.remove("hide");
-          signupForm.classList.add("hide");
-          afterAuth.classList.remove("hide");
-          notAuth.classList.add("hide");
-    
+          setLoggedUI(true);
           const profile = await getMyProfile();
           authBadge.textContent = `Connecté : ${profile?.username || session.user.email}`;
         } else {
-          btnLogout.classList.add("hide");
-          signupForm.classList.remove("hide");
-          afterAuth.classList.add("hide");
-          notAuth.classList.remove("hide");
+          setLoggedUI(false);
           authBadge.textContent = "Connecte-toi pour interagir";
         }
       });
-    }
-    
-    // Chargement initial
-    loadFeed();
-    
-    // Mettre à jour le badge
-    if (supabase) {
-      supabase.auth.getUser().then(({ data: { user } }) => {
+
+      // ========= Initial load =========
+      loadFeed();
+
+      supabase.auth.getUser().then(async ({ data: { user } }) => {
         if (user) {
-          authBadge.textContent = "Connecté";
+          const profile = await getMyProfile();
+          authBadge.textContent = `Connecté : ${profile?.username || user.email}`;
+          setLoggedUI(true);
         } else {
           authBadge.textContent = "Connecte-toi pour interagir";
+          setLoggedUI(false);
         }
       }).catch(() => {
         authBadge.textContent = "Connecte-toi pour interagir";
+        setLoggedUI(false);
       });
-    } else {
-      authBadge.textContent = "Erreur de connexion";
-    }
-    
-    }); // Fin DOMContentLoaded
+    });
   </script>
-  
-  <!-- Charger Supabase depuis CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
