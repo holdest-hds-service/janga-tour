@@ -289,7 +289,6 @@
     .error-msg { color: #FF8A8A; text-align: center; padding: 20px; }
   </style>
 
-  <!-- ✅ Important: charger Supabase AVANT ton script inline -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -395,11 +394,8 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // ========= Supabase config =========
       const SUPABASE_URL = "https://wtsmekozfpeaixqobuik.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0c21la296ZnBlYWl4cW9idWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Mjk2MjcsImV4cCI6MjA5MzQwNTYyN30.AUm9renaVr3A8pzDNx5Dm_f4XJrhkIKlnUePm6Gl5S0";
-
-      // ✅ URL fixe pour reset/magic link (GitHub Pages)
       const redirectTo = "https://starconnect-intertainment.github.io/Shop-13/";
 
       let supabase = null;
@@ -414,7 +410,6 @@
         return;
       }
 
-      // ========= DOM =========
       const authBadge = document.getElementById("authBadge");
       const feed = document.getElementById("feed");
 
@@ -446,7 +441,6 @@
       const li_email = document.getElementById("li_email");
       const li_password = document.getElementById("li_password");
 
-      // ========= Utils =========
       function escapeHtml(s) {
         if (!s) return "";
         return String(s)
@@ -489,19 +483,17 @@
         return user || null;
       }
 
-      // ========= Likes + Comments helpers =========
+      // Likes + Comments helpers
       async function getLikeState(postId, userId) {
-        // Vérifie si l'utilisateur a liké
-        const { data, error } = await supabase
+        const { data: maybeRow, error } = await supabase
           .from("likes")
           .select("*")
           .eq("post_id", postId)
           .eq("user_id", userId)
           .maybeSingle();
 
-        // Si table/policy n'existe pas, on renvoie false (pour ne pas casser l'affichage du feed)
         if (error) return { liked: false, count: 0, error };
-        return { liked: !!data, count: 0 };
+        return { liked: !!maybeRow, count: 0 };
       }
 
       async function countLikes(postId) {
@@ -526,19 +518,47 @@
         return data || [];
       }
 
+      // ✅ CHANGEMENT ICI: toggleLike accepte aussi l'anonyme (user_id = null)
       async function toggleLike(postId) {
         const user = await getSessionUser();
-        if (!user) throw new Error("Connecte-toi pour liker.");
+
+        const userId = user ? user.id : null;
 
         // check existence
-        const { data: existing, error: selErr } = await supabase
+        let existing = null;
+
+        // Pour anon: tester user_id IS NULL
+        const { data: existingRow, error: selErr } = await supabase
           .from("likes")
           .select("post_id")
           .eq("post_id", postId)
-          .eq("user_id", user.id)
-          .maybeSingle();
+          .maybeSingle()
+          .limit(1);
 
         if (selErr) throw selErr;
+
+        // On doit filtrer selon le mode:
+        // - connecté: user_id = auth.uid()
+        // - anonyme: user_id IS NULL
+        if (user) {
+          const { data: exactRow, error: selErr2 } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("post_id", postId)
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (selErr2) throw selErr2;
+          existing = exactRow;
+        } else {
+          const { data: anonRow, error: selErr2 } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("post_id", postId)
+            .is("user_id", null)
+            .maybeSingle();
+          if (selErr2) throw selErr2;
+          existing = anonRow;
+        }
 
         if (existing) {
           // unlike
@@ -546,45 +566,55 @@
             .from("likes")
             .delete()
             .eq("post_id", postId)
-            .eq("user_id", user.id);
+            .modify(q => {
+              if (userId === null) q.is("user_id", null);
+              else q.eq("user_id", userId);
+            });
 
           if (error) throw error;
           return { liked: false };
         } else {
           // like
+          const payload = { post_id: postId, user_id: userId }; // user_id = null => anon
           const { error } = await supabase
             .from("likes")
-            .insert({ post_id: postId, user_id: user.id });
+            .insert(payload);
 
           if (error) throw error;
           return { liked: true };
         }
       }
 
+      // ✅ CHANGEMENT ICI: addComment accepte aussi l'anonyme
       async function addComment(postId, text) {
-        const user = await getSessionUser();
-        if (!user) throw new Error("Connecte-toi pour commenter.");
-
         const clean = (text || "").trim();
         if (!clean) throw new Error("Écris un commentaire.");
 
-        const profile = await getMyProfile();
-        const user_username = profile?.username || user.email;
+        const user = await getSessionUser();
+        const userId = user ? user.id : null;
+
+        let user_username = "Anonyme";
+        if (user) {
+          const profile = await getMyProfile();
+          user_username = profile?.username || user.email || "Utilisateur";
+        }
+
+        const payload = {
+          post_id: postId,
+          user_id: userId,           // null pour anonyme
+          user_username,
+          text: clean
+        };
 
         const { error } = await supabase
           .from("comments")
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-            user_username,
-            text: clean
-          });
+          .insert(payload);
 
         if (error) throw error;
         return true;
       }
 
-      // ========= Feed =========
+      // Feed
       async function loadFeed() {
         feed.innerHTML = '<div class="loading">Chargement des publications...</div>';
 
@@ -607,7 +637,6 @@
 
           feed.innerHTML = "";
 
-          // Render posts
           for (const p of posts) {
             const card = document.createElement("div");
             card.className = "post";
@@ -621,7 +650,6 @@
                 : `<img src="${escapeHtml(p.media_url)}" alt="media" loading="lazy" />`)
               : "";
 
-            // Valeurs initiales (seront mises à jour)
             const likesCountElId = `likesCount-${p.id}`;
             const likeBtnId = `likeBtn-${p.id}`;
             const commentsBoxId = `comments-${p.id}`;
@@ -648,8 +676,8 @@
 
               <div class="commentBox">
                 <div class="commentRow">
-                  <input id="${commentInputId}" placeholder="${user ? 'Écrire un commentaire...' : 'Connecte-toi pour commenter'}" ${user ? '' : 'disabled'} />
-                  <button class="btn-secondary" type="button" id="btnComment-${p.id}" ${user ? '' : 'disabled'} style="flex:0 0 auto; width:auto; padding:10px 14px;">
+                  <input id="${commentInputId}" placeholder="${user ? 'Écrire un commentaire...' : 'Écrire un commentaire (anonyme)...'}" />
+                  <button class="btn-secondary" type="button" id="btnComment-${p.id}" style="flex:0 0 auto; width:auto; padding:10px 14px;">
                     Envoyer
                   </button>
                 </div>
@@ -660,16 +688,15 @@
 
             feed.appendChild(card);
 
-            // Attacher handlers
             const likeBtn = document.getElementById(likeBtnId);
             likeBtn.addEventListener("click", async () => {
               try {
                 await toggleLike(p.id);
 
-                // refresh likes + btn state (simple)
                 const count = await countLikes(p.id);
                 document.getElementById(likesCountElId).textContent = String(count);
 
+                // ✅ état like seulement si connecté (sinon on ne sait pas sans refaire une query “anon”)
                 if (userId) {
                   const { liked } = await getLikeState(p.id, userId);
                   likeBtn.classList.toggle("liked", !!liked);
@@ -704,7 +731,6 @@
               }
             });
 
-            // Charger likes + commentaires en arrière-plan
             (async () => {
               try {
                 const count = await countLikes(p.id);
@@ -728,7 +754,6 @@
                   : `<div style="color:var(--muted); font-weight:850; margin-top:10px;">Pas encore de commentaires.</div>`;
               } catch (err) {
                 console.warn("Extras (likes/comments) failed:", err);
-                // On ne casse pas le feed si likes/comments ne passent pas
               }
             })();
           }
@@ -738,7 +763,6 @@
         }
       }
 
-      // ========= Auth UI =========
       function setLoggedUI(isLogged) {
         if (isLogged) {
           signupForm.classList.add("hide");
@@ -753,7 +777,6 @@
         }
       }
 
-      // ========= Signup =========
       btnSignup.addEventListener("click", async () => {
         try{
           const username = su_username.value.trim();
@@ -792,7 +815,6 @@
         }
       });
 
-      // ========= Login =========
       btnLogin.addEventListener("click", async () => {
         try{
           loginMsg.className = "msg muted";
@@ -821,7 +843,6 @@
         }
       });
 
-      // ========= Logout =========
       btnLogout.addEventListener("click", async () => {
         await supabase.auth.signOut();
         authBadge.textContent = "Connecte-toi pour interagir";
@@ -829,7 +850,6 @@
         loadFeed();
       });
 
-      // ========= Reset password =========
       btnReset.addEventListener("click", async () => {
         const email = (li_email.value || su_email.value || "").trim();
         if (!email) return alert("Entre d’abord ton email.");
@@ -843,7 +863,6 @@
         }
       });
 
-      // ========= Publish =========
       btnPublish.addEventListener("click", async () => {
         try{
           pubMsg.className = "msg muted";
@@ -901,7 +920,6 @@
         }
       });
 
-      // ========= Auth state =========
       supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
           setLoggedUI(true);
@@ -913,7 +931,6 @@
         }
       });
 
-      // ========= Initial load =========
       loadFeed();
 
       supabase.auth.getUser().then(async ({ data: { user } }) => {
