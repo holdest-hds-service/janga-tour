@@ -6,7 +6,8 @@
     <title>HOLDEST Conciergerie × Junga Tour | Madagascar authentique</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -53,7 +54,7 @@
         }
         .header-text h1 { font-size: clamp(1rem,2.5vw,1.4rem); font-weight: 700; color: var(--green-dark); }
         .header-text p { font-size: clamp(0.6rem,1.2vw,0.75rem); color: var(--text-soft); }
-        
+
         /* Style pour le nom utilisateur cliquable */
         .user-profile-btn {
             display: flex;
@@ -70,7 +71,7 @@
             color: white;
         }
         .user-profile-btn i { font-size: 1rem; }
-        
+
         .header-buttons { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .btn-sm {
             padding: clamp(6px,1vw,8px) clamp(10px,2vw,16px); border-radius: var(--radius-xl);
@@ -82,6 +83,28 @@
         .btn-filled { background: var(--primary); color: white; }
         .btn-dark { background: #1a1a1a; border: 2px solid #ff8c42; color: #ff8c42; }
         .btn-green { background: var(--green); color: white; border: none; }
+
+        /* Boutons de langue */
+        .lang-selector {
+            display: flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        .lang-btn {
+            padding: 4px 8px;
+            border-radius: 20px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+        .lang-btn.active {
+            background: var(--green);
+            color: white;
+            border-color: var(--green);
+        }
 
         .concept-badge {
             background: linear-gradient(135deg, #fff9f2, #fff3e0);
@@ -116,11 +139,28 @@
             cursor: pointer; border: var(--border-soft);
         }
         .card:active { transform: scale(0.98); }
-        .card-img { height: clamp(150px,25vw,200px); background-size: cover; background-position: center; position: relative; }
+        /* Images en taille automatique (hauteur auto, largeur max) */
+        .card-img {
+            width: 100%;
+            height: auto;
+            min-height: 200px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: #f0f0f0;
+            cursor: zoom-in;
+            position: relative;
+        }
+        .card-img img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
         .overlay-badge {
             position: absolute; top: clamp(10px,2vw,16px); left: clamp(10px,2vw,16px);
             background: rgba(255,255,255,0.95); padding: clamp(4px,1vw,6px) clamp(10px,2vw,14px);
             border-radius: var(--radius-xl); font-size: clamp(0.6rem,1vw,0.7rem); font-weight: 700; color: var(--primary-dark);
+            z-index: 2;
         }
         .card-content { padding: clamp(14px,2vw,18px) clamp(14px,2vw,20px); }
         .card-content h3 { font-size: clamp(1rem,2vw,1.2rem); font-weight: 700; margin-bottom: 6px; }
@@ -133,6 +173,47 @@
         }
         .reserve-btn { background: var(--green); color: white; }
         .outline-btn { background: transparent; border: 2px solid var(--green); color: var(--green); }
+
+        /* Lightbox pour agrandir les images */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+        .lightbox-overlay.active {
+            display: flex;
+        }
+        .lightbox-overlay img {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(255,255,255,0.1);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 10001;
+            background: rgba(0,0,0,0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         .tab-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
@@ -240,8 +321,16 @@
         }
         .hygiene-box i { color: #27ae60; font-size: 1.5rem; margin-bottom: 6px; }
         .roots-image {
-            width: 100%; height: 180px; background-size: cover; background-position: center;
-            border-radius: 16px; margin-bottom: 12px;
+            width: 100%;
+            height: auto;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: #222;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: zoom-in;
+            min-height: 180px;
         }
         .acompte-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .acompte-option {
@@ -322,7 +411,7 @@
             margin-bottom: 20px;
             border: 2px solid var(--primary);
         }
-        
+
         /* Espace Manager - caché par défaut (visible seulement pour admin) */
         .manager-badge {
             background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
@@ -393,7 +482,7 @@
         .sortie-lieu-card .lieu-horaire { font-size: 0.75rem; color: var(--text-soft); margin-top: 6px; }
         .sortie-lieu-card .lieu-prix { font-size: 0.8rem; font-weight: 600; color: var(--primary-dark); margin-top: 6px; }
         .sortie-lieu-card .lieu-conseil { font-size: 0.75rem; background: #fff3e0; padding: 6px; border-radius: 8px; margin-top: 8px; }
-        
+
         .exchange-rate-info {
             background: #e8f0fe;
             border-radius: 12px;
@@ -422,7 +511,7 @@
             70% { opacity: 1; }
             100% { opacity: 0; transform: translateX(-50%) translateY(-20px); visibility: hidden; }
         }
-        
+
         .culture-section {
             background: linear-gradient(135deg, #fef9e6, #fff6e0);
             border-radius: 28px;
@@ -478,121 +567,139 @@
 </head>
 <body>
 
+<!-- LIGHTBOX POUR IMAGES -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightboxImage" src="" alt="Image agrandie">
+</div>
+
 <div class="app-header">
     <div class="header-left">
         <i class="fas fa-building logo-icon"></i>
         <div class="header-text">
             <h1>HOLDEST Conciergerie × Junga Tour</h1>
-            <p>Guide Randria • Madagascar authentique</p>
+            <p data-lang-fr="Guide Randria • Madagascar authentique" data-lang-en="Guide Randria • Authentic Madagascar" data-lang-it="Guida Randria • Autentico Madagascar">Guide Randria • Madagascar authentique</p>
         </div>
     </div>
     <div class="header-buttons" id="headerButtons">
-        <button class="btn-sm btn-outline" onclick="openModal('loginModal')">Se connecter</button>
-        <button class="btn-sm btn-filled" onclick="openModal('registerModal')">S'inscrire</button>
-        <button class="btn-sm btn-dark" onclick="openRootsInterface()"><i class="fas fa-fire"></i> Budget Serré</button>
+        <!-- Sélecteur de langue -->
+        <div class="lang-selector">
+            <button class="lang-btn active" data-lang="fr" onclick="changeLanguage('fr')">🇫🇷</button>
+            <button class="lang-btn" data-lang="en" onclick="changeLanguage('en')">🇬🇧</button>
+            <button class="lang-btn" data-lang="it" onclick="changeLanguage('it')">🇮🇹</button>
+        </div>
+        <button class="btn-sm btn-outline" onclick="openModal('loginModal')" data-lang-fr="Se connecter" data-lang-en="Log in" data-lang-it="Accedi">Se connecter</button>
+        <button class="btn-sm btn-filled" onclick="openModal('registerModal')" data-lang-fr="S'inscrire" data-lang-en="Sign up" data-lang-it="Registrati">S'inscrire</button>
+        <button class="btn-sm btn-dark" onclick="openRootsInterface()"><i class="fas fa-fire"></i> <span data-lang-fr="Budget Serré" data-lang-en="Low Budget" data-lang-it="Budget Serré">Budget Serré</span></button>
     </div>
 </div>
 
 <div class="concept-badge">
     <i class="fas fa-peace"></i>
     <div>
-        <strong>🌟 HOLDEST Conciergerie × Junga Tour — Plus qu'un guide : un ami sur place</strong><br>
-        <span style="font-size:0.8rem;">Randria, guide rasta cool et pro, 15 ans d'expérience. Du roots authentique au luxe privé, tous les circuits Junga Tour.</span>
+        <strong>🌟 HOLDEST Conciergerie × Junga Tour — <span data-lang-fr="Plus qu'un guide : un ami sur place" data-lang-en="More than a guide: a local friend" data-lang-it="Più che una guida: un amico locale">Plus qu'un guide : un ami sur place</span></strong><br>
+        <span style="font-size:0.8rem;" data-lang-fr="Randria, guide rasta cool et pro, 15 ans d'expérience. Du roots authentique au luxe privé, tous les circuits Junga Tour." data-lang-en="Randria, cool and pro rasta guide, 15 years experience. From authentic roots to private luxury, all Junga Tour circuits." data-lang-it="Randria, guida rasta cool e professionale, 15 anni di esperienza. Dal roots autentico al lusso privato, tutti i circuiti Junga Tour.">Randria, guide rasta cool et pro, 15 ans d'expérience. Du roots authentique au luxe privé, tous les circuits Junga Tour.</span>
     </div>
 </div>
 
 <div class="search-wrapper">
     <i class="fas fa-search" style="color:#a0b0a6;"></i>
     <input type="text" id="searchInput" placeholder="Rechercher une destination...">
-    <button id="searchBtn">Explorer</button>
+    <button id="searchBtn" data-lang-fr="Explorer" data-lang-en="Explore" data-lang-it="Esplora">Explorer</button>
 </div>
 
 <div class="exchange-rate-info" id="exchangeRateInfo">
-    <i class="fas fa-chart-line"></i> Taux de change actualisé : <span id="ariaryRate">chargement...</span>
+    <i class="fas fa-chart-line"></i> <span data-lang-fr="Taux de change actualisé" data-lang-en="Updated exchange rate" data-lang-it="Tasso di cambio aggiornato">Taux de change actualisé</span> : <span id="ariaryRate">chargement...</span>
 </div>
 
 <!-- ÉCRAN ACCUEIL -->
 <div id="homeScreen" class="screen active">
     <div class="origin-info-box" id="originInfoBox" style="display:none;">
-        <h4><i class="fas fa-globe-europe"></i> <span id="originTitle">Vous voyagez depuis la Métropole</span></h4>
-        <p id="originDetails">Randria s'adapte à votre provenance. Vols, décalage horaire, change de devises : tout est prévu.</p>
+        <h4><i class="fas fa-globe-europe"></i> <span id="originTitle"></span></h4>
+        <p id="originDetails"></p>
     </div>
-    
+
     <div id="monVoyageSection" style="display:none;">
         <div class="mon-voyage-card" id="monVoyageCard"></div>
     </div>
-    
+
     <div style="background:white; border-radius:28px; padding:clamp(16px,3vw,20px); margin-bottom:24px; display:flex; gap:clamp(10px,2vw,16px); align-items:center; flex-wrap:wrap;" class="card">
-        <div style="width:clamp(60px,15vw,80px); height:clamp(60px,15vw,80px); border-radius:50%; background:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/bc4a9ad4-e8d7-466e-fa9e-6321e2e27aa5.jpg') center/cover; flex-shrink:0;"></div>
+        <div style="width:clamp(60px,15vw,80px); height:clamp(60px,15vw,80px); border-radius:50%; background:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/bc4a9ad4-e8d7-466e-fa9e-6321e2e27aa5.jpg') center/cover; flex-shrink:0; cursor:zoom-in;" onclick="openLightbox('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/bc4a9ad4-e8d7-466e-fa9e-6321e2e27aa5.jpg')"></div>
         <div style="flex:1; min-width:150px;">
             <h3 style="font-family:'Playfair Display',serif;">Randria Bernary</h3>
-            <p style="font-size:clamp(0.7rem,1.3vw,0.8rem);">🌿 Guide rasta, 15 ans d'expérience<br>🔥 S'adapte à ton style : roots ou luxe<br><span class="tripadvisor-badge" onclick="window.open('https://www.tripadvisor.com/Attraction_Review-g293745-d12345678-Reviews-Junga_Tour-Madagascar.html', '_blank')"><i class="fab fa-tripadvisor"></i> 5☆ TripAdvisor - Junga Tour</span></p>
+            <p style="font-size:clamp(0.7rem,1.3vw,0.8rem);">
+                🌿 <span data-lang-fr="Guide rasta, 15 ans d'expérience" data-lang-en="Rasta guide, 15 years experience" data-lang-it="Guida rasta, 15 anni di esperienza">Guide rasta, 15 ans d'expérience</span><br>
+                🔥 <span data-lang-fr="S'adapte à ton style : roots ou luxe" data-lang-en="Adapts to your style: roots or luxury" data-lang-it="Si adatta al tuo stile: roots o lusso">S'adapte à ton style : roots ou luxe</span><br>
+                <span class="tripadvisor-badge" onclick="window.open('https://www.tripadvisor.com/Attraction_Review-g293745-d12345678-Reviews-Junga_Tour-Madagascar.html', '_blank')"><i class="fab fa-tripadvisor"></i> 5☆ TripAdvisor - Junga Tour</span>
+            </p>
         </div>
     </div>
-    
-    <!-- GARANTIE D'ANNULATION (placée ici comme demandé) -->
-    <div class="garantie-badge">
-        <i class="fas fa-handshake"></i>
-        <strong>🤝 Garantie de confiance HOLDEST</strong><br>
-        <small>
-            🌧️ <strong>Intempéries / orage :</strong> activité reportée ou remboursement partiel<br>
-            ❌ <strong>Annulation J-7 :</strong> remboursement 100% de l'acompte (hors 30€ dossier)<br>
-            ❌ <strong>Annulation J-2 :</strong> remboursement 50% de l'acompte<br>
-            ✅ <strong>Annulation par HOLDEST :</strong> remboursement INTÉGRAL
-        </small>
-    </div>
-    
+
+    <!-- GARANTIE DE CONFIANCE (placée en dessous de "Guide conforme" et "Votre retard") -->
     <div class="info-rapide">
         <div class="info-rapide-item" onclick="showSecuriteModal()">
             <i class="fas fa-first-aid" style="color:#2980b9;"></i>
-            🛡️ Guides formés<br><small>Secourisme & santé</small>
+            🛡️ <span data-lang-fr="Guides formés" data-lang-en="Trained Guides" data-lang-it="Guide Formate">Guides formés</span><br>
+            <small data-lang-fr="Secourisme & santé" data-lang-en="First Aid & Health" data-lang-it="Primo Soccorso & Salute">Secourisme & santé</small>
         </div>
         <div class="info-rapide-item" onclick="showRetardModal()">
             <i class="fas fa-clock" style="color:#f0c040;"></i>
-            ⏰ Vol retardé ?<br><small>Attente GRATUITE</small>
+            ⏰ <span data-lang-fr="Vol retardé ?" data-lang-en="Flight Delayed?" data-lang-it="Volo in Ritardo?">Vol retardé ?</span><br>
+            <small data-lang-fr="Attente GRATUITE" data-lang-en="FREE Waiting" data-lang-it="Attesa GRATUITA">Attente GRATUITE</small>
         </div>
     </div>
-    
-    <h2 class="section-title">✨ Destinations d'exception</h2>
+
+    <div class="garantie-badge">
+        <i class="fas fa-handshake"></i>
+        <strong>🤝 <span data-lang-fr="Garantie de confiance HOLDEST" data-lang-en="HOLDEST Trust Guarantee" data-lang-it="Garanzia di Fiducia HOLDEST">Garantie de confiance HOLDEST</span></strong><br>
+        <small>
+            🌧️ <strong data-lang-fr="Intempéries / orage :" data-lang-en="Bad weather / storm:" data-lang-it="Maltempo / tempesta:">Intempéries / orage :</strong> <span data-lang-fr="activité reportée ou remboursement partiel" data-lang-en="activity postponed or partial refund" data-lang-it="attività posticipata o rimborso parziale">activité reportée ou remboursement partiel</span><br>
+            ❌ <strong data-lang-fr="Annulation J-7 :" data-lang-en="Cancellation D-7:" data-lang-it="Cancellazione D-7:">Annulation J-7 :</strong> <span data-lang-fr="remboursement 100% de l'acompte (hors 30€ dossier)" data-lang-en="100% refund of deposit (excl. 30€ fee)" data-lang-it="rimborso 100% dell'acconto (escl. 30€ pratica)">remboursement 100% de l'acompte (hors 30€ dossier)</span><br>
+            ❌ <strong data-lang-fr="Annulation J-2 :" data-lang-en="Cancellation D-2:" data-lang-it="Cancellazione D-2:">Annulation J-2 :</strong> <span data-lang-fr="remboursement 50% de l'acompte" data-lang-en="50% refund of deposit" data-lang-it="rimborso 50% dell'acconto">remboursement 50% de l'acompte</span><br>
+            ✅ <strong data-lang-fr="Annulation par HOLDEST :" data-lang-en="Cancellation by HOLDEST:" data-lang-it="Cancellazione da HOLDEST:">Annulation par HOLDEST :</strong> <span data-lang-fr="remboursement INTÉGRAL" data-lang-en="FULL refund" data-lang-it="rimborso INTEGRALE">remboursement INTÉGRAL</span>
+        </small>
+    </div>
+
+    <h2 class="section-title">✨ <span data-lang-fr="Destinations d'exception" data-lang-en="Exceptional Destinations" data-lang-it="Destinazioni d'Eccezione">Destinations d'exception</span></h2>
     <div class="cards-grid" id="destinationsGrid"></div>
-    <h2 class="section-title" style="margin-top:32px;">🛡️ Nos formules</h2>
-    <p class="section-subtitle">Cliquez sur une formule pour voir le détail complet</p>
+    <h2 class="section-title" style="margin-top:32px;">🛡️ <span data-lang-fr="Nos formules" data-lang-en="Our Formulas" data-lang-it="Le Nostre Formule">Nos formules</span></h2>
+    <p class="section-subtitle" data-lang-fr="Cliquez sur une formule pour voir le détail complet" data-lang-en="Click on a formula to see full details" data-lang-it="Clicca su una formula per vedere i dettagli completi">Cliquez sur une formule pour voir le détail complet</p>
     <div class="cards-grid" id="servicesGrid"></div>
-    <h2 class="section-title" style="margin-top:32px;">🎉 Sorties nocturnes par ville</h2>
-    <p class="section-subtitle">Découvrez la vie nocturne de chaque destination (accès libre)</p>
+    <h2 class="section-title" style="margin-top:32px;">🎉 <span data-lang-fr="Sorties nocturnes par ville" data-lang-en="Nightlife by City" data-lang-it="Vita Notturna per Città">Sorties nocturnes par ville</span></h2>
+    <p class="section-subtitle" data-lang-fr="Découvrez la vie nocturne de chaque destination (accès libre)" data-lang-en="Discover the nightlife of each destination (free access)" data-lang-it="Scopri la vita notturna di ogni destinazione (accesso libero)">Découvrez la vie nocturne de chaque destination (accès libre)</p>
     <div class="cards-grid" id="sortiesAccueilGrid"></div>
-    <h2 class="section-title" style="margin-top:32px;">🤝 Partenaires locaux de confiance</h2>
+    <h2 class="section-title" style="margin-top:32px;">🤝 <span data-lang-fr="Partenaires locaux de confiance" data-lang-en="Trusted Local Partners" data-lang-it="Partner Locali di Fiducia">Partenaires locaux de confiance</span></h2>
     <div class="partners-grid" id="partnersGrid"></div>
-    
-    <!-- ESPACE MANAGER - Caché par défaut (visible seulement pour l'admin) -->
+
+    <!-- ESPACE MANAGER -->
     <div class="manager-badge" id="managerSection">
-        <h4><i class="fas fa-user-tie"></i> Espace Manager - HOLDEST Conciergerie</h4>
-        <p style="font-size:0.9rem; margin-bottom:8px;">Commission estimée : <strong id="managerCommission">0€</strong> (10% du total)</p>
+        <h4><i class="fas fa-user-tie"></i> <span data-lang-fr="Espace Manager - HOLDEST Conciergerie" data-lang-en="Manager Space - HOLDEST Conciergerie" data-lang-it="Spazio Manager - HOLDEST Conciergerie">Espace Manager - HOLDEST Conciergerie</span></h4>
+        <p style="font-size:0.9rem; margin-bottom:8px;"><span data-lang-fr="Commission estimée" data-lang-en="Estimated Commission" data-lang-it="Commissione Stimata">Commission estimée</span> : <strong id="managerCommission">0€</strong> (10% <span data-lang-fr="du total" data-lang-en="of total" data-lang-it="del totale">du total</span>)</p>
         <div class="code-box" id="managerCode">HOLDEST_MANAGER_2025</div>
         <div class="commission-split">
-            <span>🛡️ Guide Randria 60%</span>
-            <span>🏢 Management HOLDEST 40%</span>
+            <span>🛡️ <span data-lang-fr="Guide Randria 60%" data-lang-en="Guide Randria 60%" data-lang-it="Guida Randria 60%">Guide Randria 60%</span></span>
+            <span>🏢 <span data-lang-fr="Management HOLDEST 40%" data-lang-en="Management HOLDEST 40%" data-lang-it="Gestione HOLDEST 40%">Management HOLDEST 40%</span></span>
         </div>
-        <button class="btn-sm" style="background:#ff8c42; color:#1a1a1a; margin-top:12px; border:none; cursor:pointer;" onclick="copyManagerCode()">📋 Copier le code</button>
-        <p style="font-size:0.7rem; color:#aaa; margin-top:8px;">Code partenaire : HOLDEST_MANAGER_2025</p>
+        <button class="btn-sm" style="background:#ff8c42; color:#1a1a1a; margin-top:12px; border:none; cursor:pointer;" onclick="copyManagerCode()">📋 <span data-lang-fr="Copier le code" data-lang-en="Copy code" data-lang-it="Copia codice">Copier le code</span></button>
+        <p style="font-size:0.7rem; color:#aaa; margin-top:8px;"><span data-lang-fr="Code partenaire" data-lang-en="Partner code" data-lang-it="Codice partner">Code partenaire</span> : HOLDEST_MANAGER_2025</p>
     </div>
-    
-    <h2 class="section-title" style="margin-top:32px;">💬 Témoignages (avis certifiés)</h2>
+
+    <h2 class="section-title" style="margin-top:32px;">💬 <span data-lang-fr="Témoignages (avis certifiés)" data-lang-en="Testimonials (certified reviews)" data-lang-it="Testimonianze (recensioni certificate)">Témoignages (avis certifiés)</span></h2>
     <div id="testimonialsContainer"></div>
 </div>
 
 <!-- BUDGET -->
 <div id="budgetScreen" class="screen">
-    <h2 class="section-title">💰 Calculez votre budget détaillé</h2>
-    <p class="section-subtitle">Simulez votre voyage avec précision (Confort, Premium, Luxe)</p>
-    
+    <h2 class="section-title">💰 <span data-lang-fr="Calculez votre budget détaillé" data-lang-en="Calculate Your Detailed Budget" data-lang-it="Calcola il Tuo Budget Dettagliato">Calculez votre budget détaillé</span></h2>
+    <p class="section-subtitle" data-lang-fr="Simulez votre voyage avec précision (Confort, Premium, Luxe)" data-lang-en="Simulate your trip with precision (Comfort, Premium, Luxe)" data-lang-it="Simula il tuo viaggio con precisione (Confort, Premium, Lusso)">Simulez votre voyage avec précision (Confort, Premium, Luxe)</p>
+
     <div class="people-selector">
-        <button data-people="1" class="active">👤 Seul(e)</button>
-        <button data-people="2">👫 En couple</button>
-        <button data-people="4">👥 Groupe (4 pers.)</button>
-        <button data-people="6">🧑‍🤝‍🧑 Groupe (6+ pers.)</button>
+        <button data-people="1" class="active">👤 <span data-lang-fr="Seul(e)" data-lang-en="Solo" data-lang-it="Solo">Seul(e)</span></button>
+        <button data-people="2">👫 <span data-lang-fr="En couple" data-lang-en="Couple" data-lang-it="Coppia">En couple</span></button>
+        <button data-people="4">👥 <span data-lang-fr="Groupe (4 pers.)" data-lang-en="Group (4 pers.)" data-lang-it="Gruppo (4 pers.)">Groupe (4 pers.)</span></button>
+        <button data-people="6">🧑‍🤝‍🧑 <span data-lang-fr="Groupe (6+ pers.)" data-lang-en="Group (6+ pers.)" data-lang-it="Gruppo (6+ pers.)">Groupe (6+ pers.)</span></button>
     </div>
-    
+
     <div class="location-selector" id="locationSelector">
         <button data-loc="tana" class="active">📍 Tana</button>
         <button data-loc="majunga">📍 Majunga</button>
@@ -601,7 +708,7 @@
         <button data-loc="tamatave">📍 Tamatave</button>
     </div>
     <div class="budget-selector" id="durationSelector">
-        <button data-days="2">2j</button><button data-days="4">4j</button><button data-days="7" class="active">1 sem.</button><button data-days="10">10j</button><button data-days="14">2 sem.</button><button data-days="21">3 sem.</button><button data-days="30">1 mois</button>
+        <button data-days="2">2j</button><button data-days="4">4j</button><button data-days="7" class="active">1 <span data-lang-fr="sem." data-lang-en="wk" data-lang-it="sett.">sem.</span></button><button data-days="10">10j</button><button data-days="14">2 <span data-lang-fr="sem." data-lang-en="wks" data-lang-it="sett.">sem.</span></button><button data-days="21">3 <span data-lang-fr="sem." data-lang-en="wks" data-lang-it="sett.">sem.</span></button><button data-days="30">1 <span data-lang-fr="mois" data-lang-en="month" data-lang-it="mese">mois</span></button>
     </div>
     <div class="formula-selector" id="formulaSelector">
         <button data-formula="confort" class="active">⭐ Confort</button>
@@ -610,45 +717,50 @@
     </div>
     <div class="budget-table" id="budgetTable"></div>
     <div class="avantages-box" id="avantagesBox"></div>
-    
-    <h3 class="section-title" style="font-size:1.2rem; margin-top:16px;">🎉 Ajouter des extras</h3>
+
+    <h3 class="section-title" style="font-size:1.2rem; margin-top:16px;">🎉 <span data-lang-fr="Ajouter des extras" data-lang-en="Add Extras" data-lang-it="Aggiungi Extra">Ajouter des extras</span></h3>
     <div class="extras-grid" id="extrasGrid"></div>
-    
+
     <div class="roots-section" style="background:white; color:#1a2b22; border:2px solid var(--green); margin-bottom:16px;">
-        <h4 style="color:var(--green-dark); margin-bottom:12px;">🔒 Système de paiement sécurisé</h4>
+        <h4 style="color:var(--green-dark); margin-bottom:12px;">🔒 <span data-lang-fr="Système de paiement sécurisé" data-lang-en="Secure Payment System" data-lang-it="Sistema di Pagamento Sicuro">Système de paiement sécurisé</span></h4>
         <div class="acompte-options" id="acompteOptions" style="grid-template-columns:1fr 1fr;">
             <div class="acompte-option selected" data-acompte="aeroport" style="color:#1a2b22; background:#f0f7f2; border-color:var(--green);">
-                <i class="fas fa-plane-arrival" style="color:var(--green);"></i> Prise en charge aéroport
+                <i class="fas fa-plane-arrival" style="color:var(--green);"></i> <span data-lang-fr="Prise en charge aéroport" data-lang-en="Airport Pickup" data-lang-it="Prelievo Aeroporto">Prise en charge aéroport</span>
             </div>
             <div class="acompte-option" data-acompte="surplace" style="color:#1a2b22; background:white; border-color:#ddd;">
-                <i class="fas fa-handshake" style="color:var(--primary);"></i> Rendez-vous sur place
+                <i class="fas fa-handshake" style="color:var(--primary);"></i> <span data-lang-fr="Rendez-vous sur place" data-lang-en="Meet on Site" data-lang-it="Appuntamento sul Posto">Rendez-vous sur place</span>
             </div>
         </div>
         <p style="font-size:0.8rem; color:var(--text-soft); margin-top:10px;" id="acompteDescription">
-            <strong>Aéroport :</strong> Randria vous accueille avec un panneau à votre nom. Frais dossier 30€ + 30% du solde. <span style="color:#27ae60;">🕒 Retard vol = attente GRATUITE.</span>
+            <strong data-lang-fr="Aéroport : Randria vous accueille avec un panneau. Frais dossier 30€ + 30% du solde." data-lang-en="Airport: Randria welcomes you with a name sign. Dossier fee 30€ + 30% of balance." data-lang-it="Aeroporto: Randria ti accoglie con un cartello. Tassa pratica 30€ + 30% del saldo.">Aéroport : Randria vous accueille avec un panneau. Frais dossier 30€ + 30% du solde.</strong> <span style="color:#27ae60;">🕒 <span data-lang-fr="Retard vol = attente GRATUITE." data-lang-en="Flight delay = FREE waiting." data-lang-it="Ritardo volo = attesa GRATUITA.">Retard vol = attente GRATUITE.</span></span>
         </p>
     </div>
-    <button class="reserve-btn" id="devisBtn" onclick="openDevisModal()">📋 Recevoir mon devis personnalisé</button>
+    <button class="reserve-btn" id="devisBtn" onclick="openDevisModal()">📋 <span data-lang-fr="Recevoir mon devis personnalisé" data-lang-en="Get My Personalized Quote" data-lang-it="Ricevi il Mio Preventivo Personalizzato">Recevoir mon devis personnalisé</span></button>
     <p style="text-align:center; margin-top:12px; font-size:0.8rem; color:var(--text-soft);" id="reductionMsg"></p>
 </div>
 
 <!-- BBQ -->
 <div id="bbqScreen" class="screen">
-    <h2 class="section-title">🔥 Barbecue privé Roots & Vibes</h2>
+    <h2 class="section-title">🔥 <span data-lang-fr="Barbecue privé Roots & Vibes" data-lang-en="Private Roots & Vibes BBQ" data-lang-it="BBQ Privato Roots & Vibes">Barbecue privé Roots & Vibes</span></h2>
     <div style="background:white; border-radius:28px; padding:clamp(16px,3vw,24px); margin-bottom:24px;" class="card">
-        <ul style="margin-left:20px; line-height:2;"><li>🥩 Zébu mariné aux épices malgaches</li><li>🍗 Poulet grillé au feu de bois</li><li>🐟 Poisson frais pêché du jour</li><li>🍚 Riz et accompagnements locaux</li></ul>
+        <ul style="margin-left:20px; line-height:2;">
+            <li>🥩 <span data-lang-fr="Zébu mariné aux épices malgaches" data-lang-en="Zebu marinated in Malagasy spices" data-lang-it="Zebù marinato alle spezie malgasce">Zébu mariné aux épices malgaches</span></li>
+            <li>🍗 <span data-lang-fr="Poulet grillé au feu de bois" data-lang-en="Wood-fire grilled chicken" data-lang-it="Pollo grigliato al fuoco di legna">Poulet grillé au feu de bois</span></li>
+            <li>🐟 <span data-lang-fr="Poisson frais pêché du jour" data-lang-en="Fresh fish of the day" data-lang-it="Pesce fresco del giorno">Poisson frais pêché du jour</span></li>
+            <li>🍚 <span data-lang-fr="Riz et accompagnements locaux" data-lang-en="Rice and local sides" data-lang-it="Riso e contorni locali">Riz et accompagnements locaux</span></li>
+        </ul>
         <p style="font-weight:700;">💰 25 000 Ar/pers (~5€)</p>
-        <button class="reserve-btn" data-service="Barbecue">Réserver</button>
+        <button class="reserve-btn" data-service="Barbecue"><span data-lang-fr="Réserver" data-lang-en="Book" data-lang-it="Prenota">Réserver</span></button>
     </div>
-    <h2 class="section-title">🎉 Sorties nocturnes détaillées</h2>
-    <p class="section-subtitle">Tous les spots recommandés par Randria (Junga Tour)</p>
+    <h2 class="section-title">🎉 <span data-lang-fr="Sorties nocturnes détaillées" data-lang-en="Detailed Nightlife" data-lang-it="Vita Notturna Dettagliata">Sorties nocturnes détaillées</span></h2>
+    <p class="section-subtitle" data-lang-fr="Tous les spots recommandés par Randria (Junga Tour)" data-lang-en="All the spots recommended by Randria (Junga Tour)" data-lang-it="Tutti i locali consigliati da Randria (Junga Tour)">Tous les spots recommandés par Randria (Junga Tour)</p>
     <div id="sortiesDetailContainer"></div>
 </div>
 
 <!-- TRANSPORT -->
 <div id="transportScreen" class="screen">
-    <h2 class="section-title">🚖 Transport & Transferts</h2>
-    <p class="section-subtitle" id="transportSubtitle">Choisissez votre destination</p>
+    <h2 class="section-title">🚖 <span data-lang-fr="Transport & Transferts" data-lang-en="Transport & Transfers" data-lang-it="Trasporti & Trasferimenti">Transport & Transferts</span></h2>
+    <p class="section-subtitle" id="transportSubtitle" data-lang-fr="Choisissez votre destination" data-lang-en="Choose your destination" data-lang-it="Scegli la tua destinazione">Choisissez votre destination</p>
     <div class="location-selector" id="transportLocationSelector">
         <button data-loc="tana" class="active">📍 Tana</button>
         <button data-loc="majunga">📍 Majunga</button>
@@ -658,54 +770,58 @@
     </div>
     <div class="cards-grid" id="transportDetailsGrid"></div>
     <div class="origin-info-box" style="margin-top:16px;">
-        <h4><i class="fas fa-plane"></i> Depuis l'étranger ?</h4>
-        <p>Randria peut venir vous chercher à l'aéroport d'Ivato (Tana) ou à l'aéroport de Fascene (Nosy Be).</p>
-        <p style="margin-top:8px;"><strong>Vols directs depuis Paris :</strong> Air France, Corsair (10-11h de vol).</p>
-        <p style="margin-top:4px;"><strong>Visa :</strong> 35€ à l'arrivée pour 30 jours.</p>
-        <p style="margin-top:4px;"><strong>Décalage horaire :</strong> +2h en hiver, +1h en été (France).</p>
-        <p style="margin-top:4px;"><strong>Change :</strong> 1€ ≈ <span id="dynamicRate">5000</span> Ar (mise à jour en temps réel)</p>
+        <h4><i class="fas fa-plane"></i> <span data-lang-fr="Depuis l'étranger ?" data-lang-en="From Abroad?" data-lang-it="Dall'Estero?">Depuis l'étranger ?</span></h4>
+        <p data-lang-fr="Randria peut venir vous chercher à l'aéroport d'Ivato (Tana) ou à l'aéroport de Fascene (Nosy Be)." data-lang-en="Randria can pick you up at Ivato Airport (Tana) or Fascene Airport (Nosy Be)." data-lang-it="Randria può venirti a prendere all'aeroporto di Ivato (Tana) o all'aeroporto di Fascene (Nosy Be).">Randria peut venir vous chercher à l'aéroport d'Ivato (Tana) ou à l'aéroport de Fascene (Nosy Be).</p>
+        <p style="margin-top:8px;"><strong data-lang-fr="Vols directs depuis Paris :" data-lang-en="Direct flights from Paris:" data-lang-it="Voli diretti da Parigi:">Vols directs depuis Paris :</strong> Air France, Corsair (10-11h <span data-lang-fr="de vol" data-lang-en="flight" data-lang-it="di volo">de vol</span>).</p>
+        <p style="margin-top:4px;"><strong>Visa :</strong> 35€ <span data-lang-fr="à l'arrivée pour 30 jours" data-lang-en="on arrival for 30 days" data-lang-it="all'arrivo per 30 giorni">à l'arrivée pour 30 jours</span>.</p>
+        <p style="margin-top:4px;"><strong data-lang-fr="Décalage horaire :" data-lang-en="Time difference:" data-lang-it="Fuso orario:">Décalage horaire :</strong> +2h <span data-lang-fr="en hiver, +1h en été (France)" data-lang-en="in winter, +1h in summer (France)" data-lang-it="in inverno, +1h in estate (Francia)">en hiver, +1h en été (France)</span>.</p>
+        <p style="margin-top:4px;"><strong data-lang-fr="Change :" data-lang-en="Exchange:" data-lang-it="Cambio:">Change :</strong> 1€ ≈ <span id="dynamicRate">5000</span> Ar (<span data-lang-fr="mise à jour en temps réel" data-lang-en="real-time update" data-lang-it="aggiornamento in tempo reale">mise à jour en temps réel</span>)</p>
     </div>
 </div>
 
 <!-- EXPLORER -->
 <div id="exploreScreen" class="screen">
-    <h2 class="section-title">🗺️ Carte</h2>
+    <h2 class="section-title">🗺️ <span data-lang-fr="Carte" data-lang-en="Map" data-lang-it="Mappa">Carte</span></h2>
     <div class="map-container"><div id="madagascarMap"></div></div>
-    
-    <h2 class="section-title">🇲🇬 Culture & Traditions malgaches</h2>
-    <p class="section-subtitle">Plongez au cœur de l'identité malgache avec Randria</p>
+
+    <h2 class="section-title">🇲🇬 <span data-lang-fr="Culture & Traditions malgaches" data-lang-en="Malagasy Culture & Traditions" data-lang-it="Cultura e Tradizioni Malgasce">Culture & Traditions malgaches</span></h2>
+    <p class="section-subtitle" data-lang-fr="Plongez au cœur de l'identité malgache avec Randria" data-lang-en="Dive into the heart of Malagasy identity with Randria" data-lang-it="Immergiti nel cuore dell'identità malgascia con Randria">Plongez au cœur de l'identité malgache avec Randria</p>
     <div class="culture-section">
         <div class="culture-grid">
             <div class="culture-card">
-                <h5><i class="fas fa-drumstick-bite"></i> Le "Mora Mora"</h5>
-                <p>L'art de prendre son temps, de ne pas stresser. À Madagascar, tout se fait "mora mora" (doucement). Randria vous apprendra à apprécier ce rythme de vie.</p>
+                <h5><i class="fas fa-drumstick-bite"></i> <span data-lang-fr="Le 'Mora Mora'" data-lang-en="'Mora Mora'" data-lang-it="'Mora Mora'">Le "Mora Mora"</span></h5>
+                <p data-lang-fr="L'art de prendre son temps, de ne pas stresser. À Madagascar, tout se fait 'mora mora' (doucement). Randria vous apprendra à apprécier ce rythme de vie." data-lang-en="The art of taking your time, not stressing. In Madagascar, everything is done 'mora mora' (slowly). Randria will teach you to appreciate this pace of life." data-lang-it="L'arte di prendersi il proprio tempo, senza stress. In Madagascar, tutto si fa 'mora mora' (lentamente). Randria ti insegnerà ad apprezzare questo ritmo di vita.">L'art de prendre son temps, de ne pas stresser. À Madagascar, tout se fait "mora mora" (doucement). Randria vous apprendra à apprécier ce rythme de vie.</p>
             </div>
             <div class="culture-card">
-                <h5><i class="fas fa-hands-helping"></i> Le Fihavanana</h5>
-                <p>La solidarité et l'entraide entre proches. Une valeur essentielle qui régit les relations sociales malgaches.</p>
+                <h5><i class="fas fa-hands-helping"></i> <span data-lang-fr="Le Fihavanana" data-lang-en="Fihavanana" data-lang-it="Fihavanana">Le Fihavanana</span></h5>
+                <p data-lang-fr="La solidarité et l'entraide entre proches. Une valeur essentielle qui régit les relations sociales malgaches." data-lang-en="Solidarity and mutual aid between relatives. An essential value that governs Malagasy social relations." data-lang-it="Solidarietà e mutuo aiuto tra parenti. Un valore essenziale che regola le relazioni sociali malgasce.">La solidarité et l'entraide entre proches. Une valeur essentielle qui régit les relations sociales malgaches.</p>
             </div>
             <div class="culture-card">
-                <h5><i class="fas fa-tree"></i> Le Famadihana</h5>
-                <p>"Le retournement des morts" - Cérémonie funéraire unique où les familles honorent leurs ancêtres tous les 5-7 ans.</p>
+                <h5><i class="fas fa-tree"></i> <span data-lang-fr="Le Famadihana" data-lang-en="Famadihana" data-lang-it="Famadihana">Le Famadihana</span></h5>
+                <p data-lang-fr='"Le retournement des morts" - Cérémonie funéraire unique où les familles honorent leurs ancêtres tous les 5-7 ans.' data-lang-en='"The turning of the dead" - Unique funeral ceremony where families honor their ancestors every 5-7 years.' data-lang-it='"Il rivoltamento dei morti" - Cerimonia funebre unica dove le famiglie onorano i loro antenati ogni 5-7 anni.'>"Le retournement des morts" - Cérémonie funéraire unique où les familles honorent leurs ancêtres tous les 5-7 ans.</p>
             </div>
             <div class="culture-card">
-                <h5><i class="fas fa-hippo"></i> Le Zébu, animal sacré</h5>
-                <p>Symbole de richesse et de pouvoir. Offrir un zébu lors d'un mariage est le plus beau des cadeaux.</p>
+                <h5><i class="fas fa-hippo"></i> <span data-lang-fr="Le Zébu, animal sacré" data-lang-en="Zebu, sacred animal" data-lang-it="Zebù, animale sacro">Le Zébu, animal sacré</span></h5>
+                <p data-lang-fr="Symbole de richesse et de pouvoir. Offrir un zébu lors d'un mariage est le plus beau des cadeaux." data-lang-en="Symbol of wealth and power. Offering a zebu at a wedding is the most beautiful gift." data-lang-it="Simbolo di ricchezza e potere. Offrire uno zebù a un matrimonio è il regalo più bello.">Symbole de richesse et de pouvoir. Offrir un zébu lors d'un mariage est le plus beau des cadeaux.</p>
             </div>
             <div class="culture-card">
-                <h5><i class="fas fa-hands"></i> Savoir-vivre</h5>
-                <p>On ne touche pas la tête d'un aîné. On dit toujours "Azafady" (pardon/merci/s'il vous plaît). On se serre la main en entrant dans une pièce.</p>
+                <h5><i class="fas fa-hands"></i> <span data-lang-fr="Savoir-vivre" data-lang-en="Etiquette" data-lang-it="Galateo">Savoir-vivre</span></h5>
+                <p data-lang-fr="On ne touche pas la tête d'un aîné. On dit toujours 'Azafady' (pardon/merci/s'il vous plaît). On se serre la main en entrant dans une pièce." data-lang-en="Do not touch an elder's head. Always say 'Azafady' (sorry/thank you/please). Shake hands when entering a room." data-lang-it="Non toccare la testa di un anziano. Dire sempre 'Azafady' (scusa/grazie/per favore). Stringere la mano entrando in una stanza.">On ne touche pas la tête d'un aîné. On dit toujours "Azafady" (pardon/merci/s'il vous plaît). On se serre la main en entrant dans une pièce.</p>
             </div>
             <div class="culture-card">
-                <h5><i class="fas fa-language"></i> Expressions essentielles</h5>
-                <p>💬 Salama = Bonjour<br>💬 Misaotra = Merci<br>💬 Azafady = Pardon/SVP<br>💬 Tsara be = Très bien !<br>💬 Mankasitraka = Merci beaucoup</p>
+                <h5><i class="fas fa-language"></i> <span data-lang-fr="Expressions essentielles" data-lang-en="Essential Expressions" data-lang-it="Espressioni Essenziali">Expressions essentielles</span></h5>
+                <p>💬 Salama = <span data-lang-fr="Bonjour" data-lang-en="Hello" data-lang-it="Ciao">Bonjour</span><br>
+                💬 Misaotra = <span data-lang-fr="Merci" data-lang-en="Thank you" data-lang-it="Grazie">Merci</span><br>
+                💬 Azafady = <span data-lang-fr="Pardon/SVP" data-lang-en="Sorry/Please" data-lang-it="Scusa/Per favore">Pardon/SVP</span><br>
+                💬 Tsara be = <span data-lang-fr="Très bien !" data-lang-en="Very good!" data-lang-it="Molto bene!">Très bien !</span><br>
+                💬 Mankasitraka = <span data-lang-fr="Merci beaucoup" data-lang-en="Thank you very much" data-lang-it="Grazie mille">Merci beaucoup</span></p>
             </div>
         </div>
     </div>
-    
+
     <h2 class="section-title">❓ FAQ</h2>
     <div class="faq-grid" id="faqGrid"></div>
-    <h2 class="section-title">🎥 Vidéos</h2>
+    <h2 class="section-title">🎥 <span data-lang-fr="Vidéos" data-lang-en="Videos" data-lang-it="Video">Vidéos</span></h2>
     <div class="video-container"><iframe src="https://www.youtube.com/embed/YmZSZd6k6Qk" frameborder="0" allowfullscreen></iframe></div>
     <div class="video-container"><iframe src="https://www.youtube.com/embed/ihFWsRzQX2Q" frameborder="0" allowfullscreen></iframe></div>
 </div>
@@ -713,8 +829,8 @@
 <!-- MODALES -->
 <div class="modal-overlay" id="devisModal">
     <div class="modal-box">
-        <h3>📋 Demande de devis personnalisé</h3>
-        <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:16px;">Remplissez ce formulaire et Randria vous répondra sous 24h.</p>
+        <h3>📋 <span data-lang-fr="Demande de devis personnalisé" data-lang-en="Quote Request" data-lang-it="Richiesta Preventivo">Demande de devis personnalisé</span></h3>
+        <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:16px;" data-lang-fr="Remplissez ce formulaire et Randria vous répondra sous 24h." data-lang-en="Fill out this form and Randria will reply within 24h." data-lang-it="Compila questo modulo e Randria ti risponderà entro 24h.">Remplissez ce formulaire et Randria vous répondra sous 24h.</p>
         <form id="devisForm">
             <input type="text" id="devisNom" placeholder="Nom complet *" required>
             <input type="email" id="devisEmail" placeholder="Email *" required>
@@ -746,16 +862,16 @@
             </select>
             <textarea id="devisMessage" placeholder="Message ou demande spéciale (optionnel)"></textarea>
             <input type="hidden" id="devisBudgetTotal" value="">
-            <button type="submit" class="btn-full" style="background:var(--green); color:white;">📩 Envoyer ma demande</button>
-            <button type="button" class="btn-full" style="background:#ddd;" onclick="closeModal('devisModal')">Annuler</button>
+            <button type="submit" class="btn-full" style="background:var(--green); color:white;">📩 <span data-lang-fr="Envoyer ma demande" data-lang-en="Send my request" data-lang-it="Invia la mia richiesta">Envoyer ma demande</span></button>
+            <button type="button" class="btn-full" style="background:#ddd;" onclick="closeModal('devisModal')"><span data-lang-fr="Annuler" data-lang-en="Cancel" data-lang-it="Annulla">Annuler</span></button>
         </form>
     </div>
 </div>
 
 <div class="modal-overlay" id="rootsDevisModal">
     <div class="modal-box">
-        <h3>🌿 Demande de devis - Budget Serré</h3>
-        <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:16px;">Remplissez ce formulaire pour un voyage roots authentique avec Randria.</p>
+        <h3>🌿 <span data-lang-fr="Demande de devis - Budget Serré" data-lang-en="Quote Request - Low Budget" data-lang-it="Richiesta Preventivo - Budget Serré">Demande de devis - Budget Serré</span></h3>
+        <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:16px;" data-lang-fr="Remplissez ce formulaire pour un voyage roots authentique avec Randria." data-lang-en="Fill out this form for an authentic roots trip with Randria." data-lang-it="Compila questo modulo per un viaggio roots autentico con Randria.">Remplissez ce formulaire pour un voyage roots authentique avec Randria.</p>
         <form id="rootsDevisForm">
             <input type="text" id="rootsNom" placeholder="Nom complet *" required>
             <input type="email" id="rootsEmail" placeholder="Email *" required>
@@ -783,28 +899,28 @@
                 <option value="mixte">🔄 Mixte (selon disponibilité)</option>
             </select>
             <textarea id="rootsMessage" placeholder="Vos attentes, questions, ou demande spéciale..."></textarea>
-            <button type="submit" class="btn-full" style="background:var(--green); color:white;">🌿 Demander mon devis Roots</button>
-            <button type="button" class="btn-full" style="background:#ddd;" onclick="closeModal('rootsDevisModal')">Annuler</button>
+            <button type="submit" class="btn-full" style="background:var(--green); color:white;">🌿 <span data-lang-fr="Demander mon devis Roots" data-lang-en="Request my Roots Quote" data-lang-it="Richiedi il mio Preventivo Roots">Demander mon devis Roots</span></button>
+            <button type="button" class="btn-full" style="background:#ddd;" onclick="closeModal('rootsDevisModal')"><span data-lang-fr="Annuler" data-lang-en="Cancel" data-lang-it="Annulla">Annuler</span></button>
         </form>
     </div>
 </div>
 
 <div class="modal-overlay" id="registerModal">
     <div class="modal-box">
-        <h3>📝 Créer un compte HOLDEST</h3>
-        <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:16px;">Inscrivez-vous pour obtenir <strong>5% de réduction</strong>.</p>
+        <h3>📝 <span data-lang-fr="Créer un compte HOLDEST" data-lang-en="Create a HOLDEST Account" data-lang-it="Crea un Account HOLDEST">Créer un compte HOLDEST</span></h3>
+        <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:16px;" data-lang-fr="Inscrivez-vous pour obtenir <strong>5% de réduction</strong>." data-lang-en="Sign up to get <strong>5% discount</strong>." data-lang-it="Registrati per ottenere <strong>5% di sconto</strong>.">Inscrivez-vous pour obtenir <strong>5% de réduction</strong>.</p>
         <input type="text" placeholder="Nom complet" id="regName">
         <input type="email" placeholder="Email" id="regEmail">
         <input type="tel" placeholder="Téléphone" id="regPhone">
         <select id="regOrigin">
-            <option value="">🌍 D'où venez-vous ?</option>
+            <option value="">🌍 <span data-lang-fr="D'où venez-vous ?" data-lang-en="Where are you from?" data-lang-it="Da dove vieni?">D'où venez-vous ?</span></option>
             <option value="france">France (Métropole)</option>
             <option value="europe">Europe (hors France)</option>
             <option value="afrique">Afrique</option>
             <option value="autre">Autre</option>
         </select>
         <select id="registerCity">
-            <option value="">📍 Où voulez-vous aller ?</option>
+            <option value="">📍 <span data-lang-fr="Où voulez-vous aller ?" data-lang-en="Where do you want to go?" data-lang-it="Dove vuoi andare?">Où voulez-vous aller ?</span></option>
             <option value="tana">Antananarivo (Tana)</option>
             <option value="majunga">Majunga</option>
             <option value="nosybe">Nosy Be</option>
@@ -812,13 +928,13 @@
             <option value="tamatave">Tamatave (Toamasina)</option>
         </select>
         <select id="registerFormula">
-            <option value="">⭐ Choisissez votre formule</option>
+            <option value="">⭐ <span data-lang-fr="Choisissez votre formule" data-lang-en="Choose your formula" data-lang-it="Scegli la tua formula">Choisissez votre formule</span></option>
             <option value="confort">Confort</option>
             <option value="premium">Premium</option>
             <option value="luxe">Luxe</option>
         </select>
         <select id="registerDays">
-            <option value="">📅 Durée du séjour</option>
+            <option value="">📅 <span data-lang-fr="Durée du séjour" data-lang-en="Duration of stay" data-lang-it="Durata del soggiorno">Durée du séjour</span></option>
             <option value="7">1 semaine</option>
             <option value="10">10 jours</option>
             <option value="14">2 semaines</option>
@@ -826,27 +942,26 @@
             <option value="30">1 mois</option>
         </select>
         <input type="password" placeholder="Mot de passe" id="regPassword">
-        <button class="btn-full" style="background:var(--green); color:white;" onclick="register()">S'inscrire</button>
-        <button class="btn-full" style="background:#ddd;" onclick="closeModal('registerModal')">Annuler</button>
+        <button class="btn-full" style="background:var(--green); color:white;" onclick="register()"><span data-lang-fr="S'inscrire" data-lang-en="Sign up" data-lang-it="Registrati">S'inscrire</span></button>
+        <button class="btn-full" style="background:#ddd;" onclick="closeModal('registerModal')"><span data-lang-fr="Annuler" data-lang-en="Cancel" data-lang-it="Annulla">Annuler</span></button>
     </div>
 </div>
 
 <div class="modal-overlay" id="loginModal">
     <div class="modal-box">
-        <h3>🔐 Se connecter à HOLDEST</h3>
+        <h3>🔐 <span data-lang-fr="Se connecter à HOLDEST" data-lang-en="Log in to HOLDEST" data-lang-it="Accedi a HOLDEST">Se connecter à HOLDEST</span></h3>
         <input type="email" placeholder="Email" id="loginEmail">
         <input type="password" placeholder="Mot de passe" id="loginPassword">
-        <button class="btn-full" style="background:var(--green); color:white;" onclick="login()">Se connecter</button>
-        <button class="btn-full" style="background:#ddd;" onclick="closeModal('loginModal')">Annuler</button>
+        <button class="btn-full" style="background:var(--green); color:white;" onclick="login()"><span data-lang-fr="Se connecter" data-lang-en="Log in" data-lang-it="Accedi">Se connecter</span></button>
+        <button class="btn-full" style="background:#ddd;" onclick="closeModal('loginModal')"><span data-lang-fr="Annuler" data-lang-en="Cancel" data-lang-it="Annulla">Annuler</span></button>
     </div>
 </div>
 
-<!-- MODALE PROFIL UTILISATEUR (accessible en cliquant sur le nom) -->
 <div class="modal-overlay" id="profileModal">
     <div class="modal-box">
-        <h3><i class="fas fa-user-circle"></i> Mon profil HOLDEST</h3>
+        <h3><i class="fas fa-user-circle"></i> <span data-lang-fr="Mon profil HOLDEST" data-lang-en="My HOLDEST Profile" data-lang-it="Il Mio Profilo HOLDEST">Mon profil HOLDEST</span></h3>
         <div id="profileContent"></div>
-        <button class="btn-full" style="background:#ddd; margin-top:16px;" onclick="closeModal('profileModal')">Fermer</button>
+        <button class="btn-full" style="background:#ddd; margin-top:16px;" onclick="closeModal('profileModal')"><span data-lang-fr="Fermer" data-lang-en="Close" data-lang-it="Chiudi">Fermer</span></button>
     </div>
 </div>
 
@@ -868,11 +983,11 @@
 
 <!-- TAB BAR -->
 <div class="tab-bar">
-    <button class="tab-item active" data-screen="home"><i class="fas fa-compass"></i><span>Accueil</span></button>
-    <button class="tab-item" data-screen="budget"><i class="fas fa-coins"></i><span>Budget</span></button>
-    <button class="tab-item" data-screen="bbq"><i class="fas fa-fire"></i><span>BBQ</span></button>
-    <button class="tab-item" data-screen="transport"><i class="fas fa-car"></i><span>Transport</span></button>
-    <button class="tab-item" data-screen="explore"><i class="fas fa-map"></i><span>Explorer</span></button>
+    <button class="tab-item active" data-screen="home"><i class="fas fa-compass"></i><span data-lang-fr="Accueil" data-lang-en="Home" data-lang-it="Home">Accueil</span></button>
+    <button class="tab-item" data-screen="budget"><i class="fas fa-coins"></i><span data-lang-fr="Budget" data-lang-en="Budget" data-lang-it="Budget">Budget</span></button>
+    <button class="tab-item" data-screen="bbq"><i class="fas fa-fire"></i><span data-lang-fr="BBQ" data-lang-en="BBQ" data-lang-it="BBQ">BBQ</span></button>
+    <button class="tab-item" data-screen="transport"><i class="fas fa-car"></i><span data-lang-fr="Transport" data-lang-en="Transport" data-lang-it="Trasporti">Transport</span></button>
+    <button class="tab-item" data-screen="explore"><i class="fas fa-map"></i><span data-lang-fr="Explorer" data-lang-en="Explore" data-lang-it="Esplora">Explorer</span></button>
 </div>
 
 <a href="https://wa.me/261321122334" class="whatsapp-float" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp Randria</a>
@@ -881,145 +996,109 @@
 <div class="roots-interface" id="rootsInterface">
     <div class="roots-header">
         <h2><i class="fas fa-fire"></i> BUDGET SERRÉ LOCAL - ROOTS</h2>
-        <button class="roots-close-btn" onclick="closeRootsInterface()">✕ Retour</button>
+        <button class="roots-close-btn" onclick="closeRootsInterface()">✕ <span data-lang-fr="Retour" data-lang-en="Back" data-lang-it="Indietro">Retour</span></button>
     </div>
     <div class="roots-content">
         <div class="roots-section">
-            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/2f1888e2-93a3-6de8-841d-24a7d125c1c8.jpg');"></div>
-            <h3>🌿 La formule Roots, c'est quoi ?</h3>
-            <p style="font-size:0.9rem; margin-bottom:12px;">Voyagez comme un vrai Malgache avec Randria. Découvrez la vraie vie locale : marchés, gargotes, paysages sans vous ruiner. Une expérience authentique et humaine.</p>
-            
+            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/2f1888e2-93a3-6de8-841d-24a7d125c1c8.jpg');" onclick="openLightbox('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/2f1888e2-93a3-6de8-841d-24a7d125c1c8.jpg')"></div>
+            <h3>🌿 <span data-lang-fr="La formule Roots, c'est quoi ?" data-lang-en="What is the Roots formula?" data-lang-it="Cos'è la formula Roots?">La formule Roots, c'est quoi ?</span></h3>
+            <p style="font-size:0.9rem; margin-bottom:12px;" data-lang-fr="Voyagez comme un vrai Malgache avec Randria. Découvrez la vraie vie locale : marchés, gargotes, paysages sans vous ruiner. Une expérience authentique et humaine." data-lang-en="Travel like a real Malagasy with Randria. Discover real local life: markets, local eateries, landscapes without breaking the bank. An authentic and human experience." data-lang-it="Viaggia come un vero malgascio con Randria. Scopri la vera vita locale: mercati, gargote, paesaggi senza spendere una fortuna. Un'esperienza autentica e umana.">Voyagez comme un vrai Malgache avec Randria. Découvrez la vraie vie locale : marchés, gargotes, paysages sans vous ruiner. Une expérience authentique et humaine.</p>
+
             <div class="people-selector" id="rootsPeopleSelector" style="margin-bottom: 20px;">
-                <button data-people-roots="1" class="active">👤 Seul(e)</button>
-                <button data-people-roots="2">👫 En couple</button>
-                <button data-people-roots="4">👥 Groupe (4 pers.)</button>
-                <button data-people-roots="6">🧑‍🤝‍🧑 Groupe (6+ pers.)</button>
+                <button data-people-roots="1" class="active">👤 <span data-lang-fr="Seul(e)" data-lang-en="Solo" data-lang-it="Solo">Seul(e)</span></button>
+                <button data-people-roots="2">👫 <span data-lang-fr="En couple" data-lang-en="Couple" data-lang-it="Coppia">En couple</span></button>
+                <button data-people-roots="4">👥 <span data-lang-fr="Groupe (4)" data-lang-en="Group (4)" data-lang-it="Gruppo (4)">Groupe (4)</span></button>
+                <button data-people-roots="6">🧑‍🤝‍🧑 <span data-lang-fr="Groupe (6+)" data-lang-en="Group (6+)" data-lang-it="Gruppo (6+)">Groupe (6+)</span></button>
             </div>
-            
+
             <div class="video-container" style="margin-bottom:12px;">
                 <iframe src="https://www.youtube.com/embed/3QzUz8v6lqo" frameborder="0" allowfullscreen></iframe>
             </div>
-            <h4 style="color:#27ae60; margin-top:12px;">✅ Ce qui est inclus :</h4>
+            <h4 style="color:#27ae60; margin-top:12px;">✅ <span data-lang-fr="Ce qui est inclus :" data-lang-en="Included:" data-lang-it="Incluso:">Ce qui est inclus :</span></h4>
             <ul>
-                <li>✅ Guide Randria francophone présent avec vous</li>
-                <li>✅ Transport local (taxi-brousse, bus, marche)</li>
-                <li>✅ Logement chez l'habitant ou petit hôtel propre</li>
-                <li>✅ Repas gargotes/marchés (cuisine fraîche)</li>
-                <li>✅ Visites sites gratuits et marchés locaux</li>
-                <li>✅ Conseils hygiène et sécurité tout le séjour</li>
-                <li>✅ Apprentissage des mots malgaches de base</li>
+                <li>✅ <span data-lang-fr="Guide Randria francophone présent avec vous" data-lang-en="Guide Randria (French-speaking) present with you" data-lang-it="Guida Randria (francofona) presente con te">Guide Randria francophone présent avec vous</span></li>
+                <li>✅ <span data-lang-fr="Transport local (taxi-brousse, bus, marche)" data-lang-en="Local transport (taxi-brousse, bus, walking)" data-lang-it="Trasporto locale (taxi-brousse, bus, a piedi)">Transport local (taxi-brousse, bus, marche)</span></li>
+                <li>✅ <span data-lang-fr="Logement chez l'habitant ou petit hôtel propre" data-lang-en="Homestay or small clean hotel" data-lang-it="Alloggio presso abitanti o piccolo hotel pulito">Logement chez l'habitant ou petit hôtel propre</span></li>
+                <li>✅ <span data-lang-fr="Repas gargotes/marchés (cuisine fraîche)" data-lang-en="Meals in local eateries/markets (fresh cuisine)" data-lang-it="Pasti in gargote/mercati (cucina fresca)">Repas gargotes/marchés (cuisine fraîche)</span></li>
+                <li>✅ <span data-lang-fr="Visites sites gratuits et marchés locaux" data-lang-en="Visits to free sites and local markets" data-lang-it="Visite a siti gratuiti e mercati locali">Visites sites gratuits et marchés locaux</span></li>
+                <li>✅ <span data-lang-fr="Conseils hygiène et sécurité tout le séjour" data-lang-en="Hygiene and safety advice throughout the stay" data-lang-it="Consigli su igiene e sicurezza per tutto il soggiorno">Conseils hygiène et sécurité tout le séjour</span></li>
+                <li>✅ <span data-lang-fr="Apprentissage des mots malgaches de base" data-lang-en="Learning basic Malagasy words" data-lang-it="Apprendimento delle parole malgasce di base">Apprentissage des mots malgaches de base</span></li>
             </ul>
-            <h4 style="color:#c0392b; margin-top:12px;">❌ Non inclus :</h4>
+            <h4 style="color:#c0392b; margin-top:12px;">❌ <span data-lang-fr="Non inclus :" data-lang-en="Not included:" data-lang-it="Non incluso:">Non inclus :</span></h4>
             <ul>
-                <li>❌ Véhicule privé climatisé</li>
-                <li>❌ Hôtel climatisé</li>
-                <li>❌ Guide spécialisé (rando, plongée)</li>
-                <li>❌ Parcs nationaux payants</li>
+                <li>❌ <span data-lang-fr="Véhicule privé climatisé" data-lang-en="Air-conditioned private vehicle" data-lang-it="Veicolo privato climatizzato">Véhicule privé climatisé</span></li>
+                <li>❌ <span data-lang-fr="Hôtel climatisé" data-lang-en="Air-conditioned hotel" data-lang-it="Hotel climatizzato">Hôtel climatisé</span></li>
+                <li>❌ <span data-lang-fr="Guide spécialisé (rando, plongée)" data-lang-en="Specialized guide (hiking, diving)" data-lang-it="Guida specializzata (trekking, immersioni)">Guide spécialisé (rando, plongée)</span></li>
+                <li>❌ <span data-lang-fr="Parcs nationaux payants" data-lang-en="Paid national parks" data-lang-it="Parchi nazionali a pagamento">Parcs nationaux payants</span></li>
             </ul>
         </div>
-        
+
         <div class="roots-section">
-            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/16dfc1a3-111d-92a9-7d85-c6e3ebe9f7e4.jpg');"></div>
-            <h3>🍽️ Catégorie : Repas local</h3>
+            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/16dfc1a3-111d-92a9-7d85-c6e3ebe9f7e4.jpg');" onclick="openLightbox('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/16dfc1a3-111d-92a9-7d85-c6e3ebe9f7e4.jpg')"></div>
+            <h3>🍽️ <span data-lang-fr="Catégorie : Repas local" data-lang-en="Category: Local Food" data-lang-it="Categoria: Cibo Locale">Catégorie : Repas local</span></h3>
             <ul>
-                <li>🥘 Déjeuner gargote (riz, laoka) <span class="roots-price-tag">3 500 Ar (0,70€)</span></li>
-                <li>🍗 Poulet grillé au marché <span class="roots-price-tag">10 000 Ar (2€)</span></li>
-                <li>🛒 Courses au marché avec Randria <span class="roots-price-tag">7 000 Ar/j (1,40€)</span></li>
-                <li>🍳 Cuisiner ensemble <span class="roots-price-tag">12 000 Ar (2,40€)</span></li>
-                <li>🥥 Fruit frais (mangue, litchi, banane) <span class="roots-price-tag">2 000 Ar (0,40€)</span></li>
+                <li>🥘 <span data-lang-fr="Déjeuner gargote (riz, laoka)" data-lang-en="Lunch at local eatery (rice, laoka)" data-lang-it="Pranzo in gargota (riso, laoka)">Déjeuner gargote (riz, laoka)</span> <span class="roots-price-tag">3 500 Ar (0,70€)</span></li>
+                <li>🍗 <span data-lang-fr="Poulet grillé au marché" data-lang-en="Grilled chicken at the market" data-lang-it="Pollo grigliato al mercato">Poulet grillé au marché</span> <span class="roots-price-tag">10 000 Ar (2€)</span></li>
+                <li>🛒 <span data-lang-fr="Courses au marché avec Randria" data-lang-en="Market shopping with Randria" data-lang-it="Spesa al mercato con Randria">Courses au marché avec Randria</span> <span class="roots-price-tag">7 000 Ar/j (1,40€)</span></li>
+                <li>🍳 <span data-lang-fr="Cuisiner ensemble" data-lang-en="Cooking together" data-lang-it="Cucinare insieme">Cuisiner ensemble</span> <span class="roots-price-tag">12 000 Ar (2,40€)</span></li>
+                <li>🥥 <span data-lang-fr="Fruit frais (mangue, litchi, banane)" data-lang-en="Fresh fruit (mango, lychee, banana)" data-lang-it="Frutta fresca (mango, litchi, banana)">Fruit frais (mangue, litchi, banane)</span> <span class="roots-price-tag">2 000 Ar (0,40€)</span></li>
             </ul>
             <div class="hygiene-box">
                 <i class="fas fa-hands-wash"></i>
-                <p style="font-size:0.85rem; margin-top:8px;"><strong>🧼 Hygiène garantie :</strong> Randria connaît les meilleures gargotes propres.</p>
+                <p style="font-size:0.85rem; margin-top:8px;"><strong>🧼 <span data-lang-fr="Hygiène garantie : Randria connaît les meilleures gargotes propres." data-lang-en="Hygiene guaranteed: Randria knows the best clean local eateries." data-lang-it="Igiene garantita: Randria conosce le migliori gargote pulite.">Hygiène garantie : Randria connaît les meilleures gargotes propres.</span></strong></p>
             </div>
         </div>
-        
+
         <div class="roots-section">
-            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/cafac979-8e99-0a9f-07e6-be88471b2334.jpg');"></div>
-            <h3>🏠 Catégorie : Hébergement local</h3>
+            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/cafac979-8e99-0a9f-07e6-be88471b2334.jpg');" onclick="openLightbox('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/cafac979-8e99-0a9f-07e6-be88471b2334.jpg')"></div>
+            <h3>🏠 <span data-lang-fr="Catégorie : Hébergement local" data-lang-en="Category: Local Accommodation" data-lang-it="Categoria: Alloggio Locale">Catégorie : Hébergement local</span></h3>
             <ul>
-                <li>🛏️ Chambre chez l'habitant <span class="roots-price-tag">20 000 Ar (4€)</span></li>
-                <li>🏠 Appartement simple <span class="roots-price-tag">50 000 Ar (10€)</span></li>
-                <li>👥 Colocation <span class="roots-price-tag">15 000 Ar (3€)</span></li>
-                <li>🛋️ Canapé chez Randria <span class="roots-price-tag">Gratuit</span></li>
-                <li>🏕️ Bungalow basique <span class="roots-price-tag">35 000 Ar (7€)</span></li>
+                <li>🛏️ <span data-lang-fr="Chambre chez l'habitant" data-lang-en="Room at a local's home" data-lang-it="Camera presso abitante">Chambre chez l'habitant</span> <span class="roots-price-tag">20 000 Ar (4€)</span></li>
+                <li>🏠 <span data-lang-fr="Appartement simple" data-lang-en="Simple apartment" data-lang-it="Appartamento semplice">Appartement simple</span> <span class="roots-price-tag">50 000 Ar (10€)</span></li>
+                <li>👥 <span data-lang-fr="Colocation" data-lang-en="Shared accommodation" data-lang-it="Coabitazione">Colocation</span> <span class="roots-price-tag">15 000 Ar (3€)</span></li>
+                <li>🛋️ <span data-lang-fr="Canapé chez Randria" data-lang-en="Couch at Randria's" data-lang-it="Divano da Randria">Canapé chez Randria</span> <span class="roots-price-tag">Gratuit / Free / Gratis</span></li>
+                <li>🏕️ <span data-lang-fr="Bungalow basique" data-lang-en="Basic bungalow" data-lang-it="Bungalow basico">Bungalow basique</span> <span class="roots-price-tag">35 000 Ar (7€)</span></li>
             </ul>
             <div class="hygiene-box">
                 <i class="fas fa-home"></i>
-                <p style="font-size:0.85rem; margin-top:8px;"><strong>🏠 Propreté vérifiée :</strong> Randria contrôle chaque logement.</p>
+                <p style="font-size:0.85rem; margin-top:8px;"><strong>🏠 <span data-lang-fr="Propreté vérifiée : Randria contrôle chaque logement." data-lang-en="Verified cleanliness: Randria checks every accommodation." data-lang-it="Pulizia verificata: Randria controlla ogni alloggio.">Propreté vérifiée : Randria contrôle chaque logement.</span></strong></p>
             </div>
         </div>
-        
+
         <div class="roots-section">
-            <div class="roots-image" style="background-image:url('https://holdest-hds-service.github.io/janga-tour/');"></div>
-            <h3>🚌 Catégorie : Transport local</h3>
-            <ul>
-                <li>🚐 Taxi-brousse Tana-Majunga <span class="roots-price-tag">40 000 Ar (8€)</span></li>
-                <li>🛵 Moto-taxi en ville <span class="roots-price-tag">3 000 Ar (0,60€)</span></li>
-                <li>🛴 Pousse-pousse <span class="roots-price-tag">1 500 Ar (0,30€)</span></li>
-                <li>🚌 Bus urbain <span class="roots-price-tag">1 000 Ar (0,20€)</span></li>
-                <li>⛵ Piège traditionnelle (Nosy Be) <span class="roots-price-tag">5 000 Ar (1€)</span></li>
-            </ul>
-        </div>
-        
-        <div class="roots-section">
-            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/4940ee7b-13b2-8b18-a12a-ef0a539ef21a.jpg');"></div>
-            <h3>🗣️ Catégorie : Apprends le malgache</h3>
+            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/4940ee7b-13b2-8b18-a12a-ef0a539ef21a.jpg');" onclick="openLightbox('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/4940ee7b-13b2-8b18-a12a-ef0a539ef21a.jpg')"></div>
+            <h3>🗣️ <span data-lang-fr="Catégorie : Apprends le malgache" data-lang-en="Category: Learn Malagasy" data-lang-it="Categoria: Impara il Malgascio">Catégorie : Apprends le malgache</span></h3>
             <div class="roots-grid">
-                <div class="roots-grid-item">👋 Salama<br><small>Bonjour</small></div>
-                <div class="roots-grid-item">🙏 Misaotra<br><small>Merci</small></div>
-                <div class="roots-grid-item">💰 Hoatrinona?<br><small>Combien?</small></div>
-                <div class="roots-grid-item">😋 Tsara be!<br><small>Très bon!</small></div>
-                <div class="roots-grid-item">🤝 Azafady<br><small>Pardon/SVP</small></div>
-                <div class="roots-grid-item">👋 Veloma<br><small>Au revoir</small></div>
+                <div class="roots-grid-item">👋 Salama<br><small>Bonjour / Hello / Ciao</small></div>
+                <div class="roots-grid-item">🙏 Misaotra<br><small>Merci / Thank you / Grazie</small></div>
+                <div class="roots-grid-item">💰 Hoatrinona?<br><small>Combien? / How much? / Quanto?</small></div>
+                <div class="roots-grid-item">😋 Tsara be!<br><small>Très bon! / Very good! / Molto buono!</small></div>
+                <div class="roots-grid-item">🤝 Azafady<br><small>Pardon/SVP / Sorry/Please / Scusa/Per favore</small></div>
+                <div class="roots-grid-item">👋 Veloma<br><small>Au revoir / Goodbye / Arrivederci</small></div>
             </div>
         </div>
-        
-        <div class="roots-section">
-            <div class="roots-image" style="background-image:url('https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/3a23bfaa-20b4-df11-ff1b-54cce7ceec83.jpg');"></div>
-            <h3>🎁 Catégorie : Artisanat & Cadeaux locaux</h3>
-            <ul>
-                <li>🧣 Lamba (écharpe traditionnelle) <span class="roots-price-tag">6 000 Ar (1,20€)</span></li>
-                <li>🪵 Statuette bois sculpté <span class="roots-price-tag">10 000 Ar (2€)</span></li>
-                <li>🌿 Vanille bourbon <span class="roots-price-tag">4 000 Ar (0,80€)</span></li>
-                <li>🧺 Panier vannerie <span class="roots-price-tag">8 000 Ar (1,60€)</span></li>
-                <li>💍 Bijoux en graines <span class="roots-price-tag">3 000 Ar (0,60€)</span></li>
-            </ul>
-        </div>
-        
+
         <div class="roots-section" id="rootsBudgetSection">
-            <h3>💰 Budget estimé (1 semaine Roots)</h3>
+            <h3>💰 <span data-lang-fr="Budget estimé (1 semaine Roots)" data-lang-en="Estimated Budget (1 week Roots)" data-lang-it="Budget Stimato (1 settimana Roots)">Budget estimé (1 semaine Roots)</span></h3>
             <div id="rootsBudgetDetails">
                 <ul>
-                    <li>Guide Randria <span class="roots-price-tag" id="rootsGuidePrice">28€ x 7 = 196€</span></li>
-                    <li>Transport local <span class="roots-price-tag" id="rootsTransportPrice">10€ x 7 = 70€</span></li>
-                    <li>Hébergement <span class="roots-price-tag" id="rootsHebergementPrice">15€ x 7 = 105€</span></li>
-                    <li>Repas <span class="roots-price-tag" id="rootsRepasPrice">8€ x 7 = 56€</span></li>
-                    <li>Activités <span class="roots-price-tag" id="rootsActivitesPrice">10€ x 7 = 70€</span></li>
+                    <li><span data-lang-fr="Guide Randria" data-lang-en="Guide Randria" data-lang-it="Guida Randria">Guide Randria</span> <span class="roots-price-tag" id="rootsGuidePrice">28€ x 7 = 196€</span></li>
+                    <li><span data-lang-fr="Transport local" data-lang-en="Local Transport" data-lang-it="Trasporto Locale">Transport local</span> <span class="roots-price-tag" id="rootsTransportPrice">10€ x 7 = 70€</span></li>
+                    <li><span data-lang-fr="Hébergement" data-lang-en="Accommodation" data-lang-it="Alloggio">Hébergement</span> <span class="roots-price-tag" id="rootsHebergementPrice">15€ x 7 = 105€</span></li>
+                    <li><span data-lang-fr="Repas" data-lang-en="Meals" data-lang-it="Pasti">Repas</span> <span class="roots-price-tag" id="rootsRepasPrice">8€ x 7 = 56€</span></li>
+                    <li><span data-lang-fr="Activités" data-lang-en="Activities" data-lang-it="Attività">Activités</span> <span class="roots-price-tag" id="rootsActivitesPrice">10€ x 7 = 70€</span></li>
                 </ul>
                 <p style="font-weight:700; text-align:center; margin-top:12px; font-size:1.1rem;">💰 TOTAL : <span id="rootsTotalEuro">497€</span> (<span id="rootsArTotal">2 485 000</span> Ar)</p>
-                <p style="font-size:0.8rem; text-align:center; margin-top:8px;">🔒 Acompte : Frais de dossier <strong>30€</strong> + Réservation <strong id="rootsAcompteReservation">124€</strong> = <strong id="rootsAcompteTotal">154€</strong></p>
-                <p style="font-size:0.8rem; text-align:center;">💵 Solde sur place : <strong id="rootsSolde">343€</strong></p>
+                <p style="font-size:0.8rem; text-align:center; margin-top:8px;">🔒 <span data-lang-fr="Acompte : Frais de dossier" data-lang-en="Deposit: Dossier fee" data-lang-it="Acconto: Tassa pratica">Acompte : Frais de dossier</span> <strong>30€</strong> + <span data-lang-fr="Réservation" data-lang-en="Reservation" data-lang-it="Prenotazione">Réservation</span> <strong id="rootsAcompteReservation">124€</strong> = <strong id="rootsAcompteTotal">154€</strong></p>
+                <p style="font-size:0.8rem; text-align:center;">💵 <span data-lang-fr="Solde sur place" data-lang-en="Balance on site" data-lang-it="Saldo sul posto">Solde sur place</span> : <strong id="rootsSolde">343€</strong></p>
             </div>
         </div>
-        
-        <div class="roots-section">
-            <h3>🧮 Simulez votre propre budget Roots</h3>
-            <div style="display: grid; gap: 10px;">
-                <label>Nombre de jours : <input type="number" id="rootsCustomDays" value="7" min="1" style="width: 80px; background: #333; color: white; border: 1px solid #ff8c42; padding: 5px; border-radius: 5px;"></label>
-                <label>Nombre de personnes : <input type="number" id="rootsCustomPeople" value="2" min="1" style="width: 80px; background: #333; color: white; border: 1px solid #ff8c42; padding: 5px; border-radius: 5px;"></label>
-                <label>Hébergement par jour (€) : <input type="number" id="rootsCustomHebergement" value="15" min="0" style="width: 80px; background: #333; color: white; border: 1px solid #ff8c42; padding: 5px; border-radius: 5px;"></label>
-                <label>Repas par jour (€) : <input type="number" id="rootsCustomRepas" value="8" min="0" style="width: 80px; background: #333; color: white; border: 1px solid #ff8c42; padding: 5px; border-radius: 5px;"></label>
-                <button class="roots-btn" onclick="calculateCustomRootsBudget()" style="margin-top: 10px;">Calculer mon budget</button>
-                <div id="rootsCustomResult" style="margin-top: 15px; text-align: center; font-weight: bold; background: #333; padding: 10px; border-radius: 10px;"></div>
-            </div>
-        </div>
-        
+
         <button class="roots-btn" style="background:#25D366; color:white; margin-top:20px;" onclick="openRootsDevisModal()">
-            <i class="fab fa-whatsapp"></i> Demander un devis Roots
+            <i class="fab fa-whatsapp"></i> <span data-lang-fr="Demander un devis Roots" data-lang-en="Request a Roots Quote" data-lang-it="Richiedi un Preventivo Roots">Demander un devis Roots</span>
         </button>
         <button class="roots-btn" style="background:#ff8c42; color:#1a1a1a; margin-top:10px;" onclick="window.open('https://wa.me/261321122334?text=Salut%20Randria,%20je%20veux%20le%20budget%20serr%C3%A9%20!','_blank')">
-            <i class="fab fa-whatsapp"></i> Contacter Randria directement
+            <i class="fab fa-whatsapp"></i> <span data-lang-fr="Contacter Randria directement" data-lang-en="Contact Randria Directly" data-lang-it="Contatta Randria Direttamente">Contacter Randria directement</span>
         </button>
     </div>
 </div>
@@ -1028,10 +1107,10 @@
     // ==================== CONFIGURATION ====================
     const FORMSPREE_ENDPOINT = "https://formspree.io/f/MON_ID";
     const FORMSPREE_ROOTS_ENDPOINT = "https://formspree.io/f/MON_ID_ROOTS";
-    
+
     let currentExchangeRate = 5000;
     let isLoggedIn = false;
-    let isAdmin = false;  // Mode admin (pour voir l'espace manager)
+    let isAdmin = false;
     let userName = "";
     let userEmail = "";
     let userCity = "";
@@ -1041,6 +1120,51 @@
     let selectedAcompte = "aeroport";
     let selectedExtras = [];
     let currentPeopleCount = 1;
+    let currentLang = 'fr';
+
+    // ==================== LANGUE ====================
+    function changeLanguage(lang) {
+        currentLang = lang;
+        // Mise à jour des boutons de langue
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+        // Mise à jour de tous les éléments avec data-lang-xx
+        document.querySelectorAll('[data-lang-fr]').forEach(el => {
+            const text = el.getAttribute(`data-lang-${lang}`);
+            if (text) el.innerHTML = text;
+        });
+        // Mise à jour des placeholders
+        document.querySelectorAll('[data-placeholder-fr]').forEach(el => {
+            const placeholder = el.getAttribute(`data-placeholder-${lang}`);
+            if (placeholder) el.placeholder = placeholder;
+        });
+        // Mise à jour du search input placeholder
+        const searchPlaceholders = {
+            fr: 'Rechercher une destination...',
+            en: 'Search a destination...',
+            it: 'Cerca una destinazione...'
+        };
+        document.getElementById('searchInput').placeholder = searchPlaceholders[lang] || searchPlaceholders.fr;
+        // Re-rendre les éléments dynamiques
+        updateOriginInfo();
+        updateBudgetDisplay();
+        if (isLoggedIn) updateMonVoyageDisplay();
+        if (isLoggedIn && userCity) updateExtrasDisplay(userCity);
+    }
+
+    // ==================== LIGHTBOX ====================
+    function openLightbox(imageSrc) {
+        const lightbox = document.getElementById('lightboxOverlay');
+        const lightboxImg = document.getElementById('lightboxImage');
+        lightboxImg.src = imageSrc;
+        lightbox.classList.add('active');
+    }
+
+    function closeLightbox() {
+        const lightbox = document.getElementById('lightboxOverlay');
+        lightbox.classList.remove('active');
+    }
 
     // ==================== TAUX DE CHANGE ====================
     async function fetchExchangeRate() {
@@ -1059,160 +1183,137 @@
         }
     }
 
-    // ==================== DONNÉES ====================
+    // ==================== DONNÉES (multilingues) ====================
     const programmesData = {
         tana: [
-            { jour: 1, desc: "Arrivée à l'aéroport d'Ivato, accueil par Randria. Transfert à l'hôtel et premier contact avec Tana. Dîner dans un restaurant typique malgache." },
-            { jour: 2, desc: "Visite de la Haute Ville : Palais de la Reine (Rova), vue panoramique sur la ville. Après-midi au marché d'Analakely pour l'artisanat." },
-            { jour: 3, desc: "Excursion à la Croc Farm (crocodiles, lémuriens) et découverte de l'artisanat local. Déjeuner au bord du lac." },
-            { jour: 4, desc: "Journée détente ou option : visite du lac Anosy et du quartier branché d'Isoraka. Soirée au restaurant La Varangue." },
-            { jour: 5, desc: "Départ vers la campagne : visite du village d'Ambohimanga, site classé UNESCO. Retour à Tana en fin de journée." }
+            { jour: 1, fr: "Arrivée à l'aéroport d'Ivato, accueil par Randria. Transfert à l'hôtel et premier contact avec Tana. Dîner dans un restaurant typique malgache.", en: "Arrival at Ivato Airport, welcome by Randria. Transfer to hotel and first contact with Tana. Dinner in a typical Malagasy restaurant.", it: "Arrivo all'aeroporto di Ivato, accoglienza da Randria. Trasferimento in hotel e primo contatto con Tana. Cena in un ristorante tipico malgascio." },
+            { jour: 2, fr: "Visite de la Haute Ville : Palais de la Reine (Rova), vue panoramique sur la ville. Après-midi au marché d'Analakely pour l'artisanat.", en: "Visit of the Upper Town: Queen's Palace (Rova), panoramic view of the city. Afternoon at Analakely market for crafts.", it: "Visita della Città Alta: Palazzo della Regina (Rova), vista panoramica sulla città. Pomeriggio al mercato di Analakely per l'artigianato." },
+            { jour: 3, fr: "Excursion à la Croc Farm (crocodiles, lémuriens) et découverte de l'artisanat local. Déjeuner au bord du lac.", en: "Excursion to Croc Farm (crocodiles, lemurs) and discovery of local crafts. Lunch by the lake.", it: "Escursione alla Croc Farm (coccodrilli, lemuri) e scoperta dell'artigianato locale. Pranzo in riva al lago." },
+            { jour: 4, fr: "Journée détente ou option : visite du lac Anosy et du quartier branché d'Isoraka. Soirée au restaurant La Varangue.", en: "Relaxation day or option: visit of Lake Anosy and the trendy Isoraka district. Evening at La Varangue restaurant.", it: "Giornata relax o opzione: visita del lago Anosy e del quartiere trendy di Isoraka. Serata al ristorante La Varangue." },
+            { jour: 5, fr: "Départ vers la campagne : visite du village d'Ambohimanga, site classé UNESCO. Retour à Tana en fin de journée.", en: "Departure to the countryside: visit of Ambohimanga village, UNESCO site. Return to Tana at the end of the day.", it: "Partenza verso la campagna: visita del villaggio di Ambohimanga, sito UNESCO. Ritorno a Tana a fine giornata." }
         ],
         nosybe: [
-            { jour: 1, desc: "Arrivée à l'aéroport de Fascene, transfert à l'hôtel. Dîner sur la plage de Madirokely, cocktail au coucher du soleil." },
-            { jour: 2, desc: "Excursion en bateau vers l'île de Nosy Komba : lémuriens en liberté, artisanat local. Snorkeling dans la baie." },
-            { jour: 3, desc: "Plongée ou snorkeling dans la réserve marine de Nosy Tanikely. Déjeuner pique-nique sur l'île." },
-            { jour: 4, desc: "Découverte de Lokobe, forêt tropicale et lémuriens noirs. Après-midi plage à Andilana." },
-            { jour: 5, desc: "Journée libre : farniente, massage sur la plage, ou excursion optionnelle à l'île aux parfums." }
+            { jour: 1, fr: "Arrivée à l'aéroport de Fascene, transfert à l'hôtel. Dîner sur la plage de Madirokely, cocktail au coucher du soleil.", en: "Arrival at Fascene Airport, transfer to hotel. Dinner on Madirokely beach, sunset cocktail.", it: "Arrivo all'aeroporto di Fascene, trasferimento in hotel. Cena sulla spiaggia di Madirokely, cocktail al tramonto." },
+            { jour: 2, fr: "Excursion en bateau vers l'île de Nosy Komba : lémuriens en liberté, artisanat local. Snorkeling dans la baie.", en: "Boat excursion to Nosy Komba Island: free lemurs, local crafts. Snorkeling in the bay.", it: "Escursione in barca verso l'isola di Nosy Komba: lemuri in libertà, artigianato locale. Snorkeling nella baia." },
+            { jour: 3, fr: "Plongée ou snorkeling dans la réserve marine de Nosy Tanikely. Déjeuner pique-nique sur l'île.", en: "Diving or snorkeling in Nosy Tanikely marine reserve. Picnic lunch on the island.", it: "Immersione o snorkeling nella riserva marina di Nosy Tanikely. Pranzo picnic sull'isola." },
+            { jour: 4, fr: "Découverte de Lokobe, forêt tropicale et lémuriens noirs. Après-midi plage à Andilana.", en: "Discovery of Lokobe, tropical forest and black lemurs. Afternoon at Andilana beach.", it: "Scoperta di Lokobe, foresta tropicale e lemuri neri. Pomeriggio in spiaggia ad Andilana." },
+            { jour: 5, fr: "Journée libre : farniente, massage sur la plage, ou excursion optionnelle à l'île aux parfums.", en: "Free day: relaxation, beach massage, or optional excursion to the perfume island.", it: "Giornata libera: relax, massaggio in spiaggia, o escursione opzionale all'isola dei profumi." }
         ],
         majunga: [
-            { jour: 1, desc: "Arrivée à Majunga, installation à l'hôtel. Promenade sur la plage du Grand Pavois, première baignade." },
-            { jour: 2, desc: "Visite des Baobabs amoureux et du rocher noir au coucher du soleil. Photos inoubliables." },
-            { jour: 3, desc: "Journée au marché Kijana, découverte de la vie locale. Déjeuner dans une gargote authentique." },
-            { jour: 4, desc: "Excursion à la plage d'Antsanitia, l'une des plus belles plages de la région. Baignade et détente." }
+            { jour: 1, fr: "Arrivée à Majunga, installation à l'hôtel. Promenade sur la plage du Grand Pavois, première baignade.", en: "Arrival in Majunga, hotel check-in. Walk on Grand Pavois beach, first swim.", it: "Arrivo a Majunga, sistemazione in hotel. Passeggiata sulla spiaggia del Grand Pavois, primo bagno." },
+            { jour: 2, fr: "Visite des Baobabs amoureux et du rocher noir au coucher du soleil. Photos inoubliables.", en: "Visit of the Lovers' Baobabs and the black rock at sunset. Unforgettable photos.", it: "Visita dei Baobab innamorati e della roccia nera al tramonto. Foto indimenticabili." },
+            { jour: 3, fr: "Journée au marché Kijana, découverte de la vie locale. Déjeuner dans une gargote authentique.", en: "Day at Kijana market, discovery of local life. Lunch in an authentic local eatery.", it: "Giornata al mercato Kijana, scoperta della vita locale. Pranzo in una gargota autentica." },
+            { jour: 4, fr: "Excursion à la plage d'Antsanitia, l'une des plus belles plages de la région. Baignade et détente.", en: "Excursion to Antsanitia beach, one of the most beautiful beaches in the region. Swimming and relaxation.", it: "Escursione alla spiaggia di Antsanitia, una delle più belle spiagge della regione. Bagno e relax." }
         ],
         diego: [
-            { jour: 1, desc: "Arrivée à Diego Suarez, transfert à l'hôtel. Vue imprenable sur la baie. Dîner au restaurant de fruits de mer." },
-            { jour: 2, desc: "Excursion à la Baie des Dunes et à la mer Émeraude. Baignade dans les eaux turquoise." },
-            { jour: 3, desc: "Randonnée à la Montagne des Français, panorama exceptionnel. Visite du village de Ramena." },
-            { jour: 4, desc: "Journée à la plage de Sakalava, spot de kitesurf réputé. Coucher de soleil sur l'océan Indien." }
+            { jour: 1, fr: "Arrivée à Diego Suarez, transfert à l'hôtel. Vue imprenable sur la baie. Dîner au restaurant de fruits de mer.", en: "Arrival in Diego Suarez, transfer to hotel. Stunning view of the bay. Dinner at a seafood restaurant.", it: "Arrivo a Diego Suarez, trasferimento in hotel. Vista mozzafiato sulla baia. Cena al ristorante di frutti di mare." },
+            { jour: 2, fr: "Excursion à la Baie des Dunes et à la mer Émeraude. Baignade dans les eaux turquoise.", en: "Excursion to Dunes Bay and Emerald Sea. Swimming in turquoise waters.", it: "Escursione alla Baia delle Dune e al Mare Smeraldo. Bagno nelle acque turchesi." },
+            { jour: 3, fr: "Randonnée à la Montagne des Français, panorama exceptionnel. Visite du village de Ramena.", en: "Hike to Montagne des Français, exceptional panorama. Visit of Ramena village.", it: "Trekking alla Montagna dei Francesi, panorama eccezionale. Visita del villaggio di Ramena." },
+            { jour: 4, fr: "Journée à la plage de Sakalava, spot de kitesurf réputé. Coucher de soleil sur l'océan Indien.", en: "Day at Sakalava beach, renowned kitesurf spot. Sunset over the Indian Ocean.", it: "Giornata alla spiaggia di Sakalava, famoso spot di kitesurf. Tramonto sull'Oceano Indiano." }
         ],
         tamatave: [
-            { jour: 1, desc: "Arrivée à Tamatave, promenade le long du canal des Pangalanes. Installation à l'hôtel." },
-            { jour: 2, desc: "Visite du marché bazar et excursion à Foulpointe, plage de sable blanc à 60 km." },
-            { jour: 3, desc: "Journée libre : découverte du port, dégustation de fruits de mer frais, balade en pirogue." }
+            { jour: 1, fr: "Arrivée à Tamatave, promenade le long du canal des Pangalanes. Installation à l'hôtel.", en: "Arrival in Tamatave, walk along the Pangalanes canal. Hotel check-in.", it: "Arrivo a Tamatave, passeggiata lungo il canale dei Pangalanes. Sistemazione in hotel." },
+            { jour: 2, fr: "Visite du marché bazar et excursion à Foulpointe, plage de sable blanc à 60 km.", en: "Visit of the bazaar market and excursion to Foulpointe, white sand beach 60 km away.", it: "Visita del mercato bazar e escursione a Foulpointe, spiaggia di sabbia bianca a 60 km." },
+            { jour: 3, fr: "Journée libre : découverte du port, dégustation de fruits de mer frais, balade en pirogue.", en: "Free day: discovery of the port, tasting of fresh seafood, pirogue ride.", it: "Giornata libera: scoperta del porto, degustazione di frutti di mare freschi, giro in piroga." }
         ]
     };
 
     const extrasData = {
         tana: [
-            { name: "Soirée au Glacier", price: 15, desc: "Boîte de nuit chic, DJ sets" },
-            { name: "Dîner gastronomique", price: 25, desc: "Restaurant La Varangue" },
-            { name: "Concert live", price: 10, desc: "Musique malgache au Bus Magique" }
+            { name: "Soirée au Glacier", price: 15, desc: { fr: "Boîte de nuit chic, DJ sets", en: "Chic nightclub, DJ sets", it: "Discoteca chic, DJ set" } },
+            { name: "Dîner gastronomique", price: 25, desc: { fr: "Restaurant La Varangue", en: "La Varangue Restaurant", it: "Ristorante La Varangue" } },
+            { name: "Concert live", price: 10, desc: { fr: "Musique malgache au Bus Magique", en: "Malagasy music at Bus Magique", it: "Musica malgascia al Bus Magique" } }
         ],
         nosybe: [
-            { name: "Soirée Madirokely", price: 10, desc: "Bars de plage, feu de camp" },
-            { name: "Plongée sous-marine", price: 40, desc: "Avec moniteur certifié" },
-            { name: "Massage plage", price: 15, desc: "Détente absolue" }
+            { name: "Soirée Madirokely", price: 10, desc: { fr: "Bars de plage, feu de camp", en: "Beach bars, campfire", it: "Bar sulla spiaggia, falò" } },
+            { name: "Plongée sous-marine", price: 40, desc: { fr: "Avec moniteur certifié", en: "With certified instructor", it: "Con istruttore certificato" } },
+            { name: "Massage plage", price: 15, desc: { fr: "Détente absolue", en: "Absolute relaxation", it: "Relax assoluto" } }
         ],
         majunga: [
-            { name: "Palm Beach Club", price: 10, desc: "Soirée dansante, cocktails" },
-            { name: "Sortie bateau sunset", price: 25, desc: "Promenade en mer" }
+            { name: "Palm Beach Club", price: 10, desc: { fr: "Soirée dansante, cocktails", en: "Dance party, cocktails", it: "Serata danzante, cocktail" } },
+            { name: "Sortie bateau sunset", price: 25, desc: { fr: "Promenade en mer", en: "Sea stroll", it: "Passeggiata in mare" } }
         ],
         diego: [
-            { name: "Plongée Baie des Dunes", price: 35, desc: "Eaux cristallines" },
-            { name: "Kitesurf Sakalava", price: 50, desc: "Spot réputé" }
+            { name: "Plongée Baie des Dunes", price: 35, desc: { fr: "Eaux cristallines", en: "Crystal clear waters", it: "Acque cristalline" } },
+            { name: "Kitesurf Sakalava", price: 50, desc: { fr: "Spot réputé", en: "Renowned spot", it: "Spot rinomato" } }
         ],
         tamatave: [
-            { name: "Coconut Lounge", price: 10, desc: "Soirée branchée, tapas" },
-            { name: "Bateau canal", price: 8, desc: "Promenade pittoresque" }
+            { name: "Coconut Lounge", price: 10, desc: { fr: "Soirée branchée, tapas", en: "Trendy evening, tapas", it: "Serata trendy, tapas" } },
+            { name: "Bateau canal", price: 8, desc: { fr: "Promenade pittoresque", en: "Picturesque stroll", it: "Passeggiata pittoresca" } }
         ]
     };
 
     const sortiesDetailData = {
         tana: {
-            title: "🌃 Antananarivo by night",
-            desc: "La capitale s'anime la nuit ! Bars branchés, musique live, restaurants chics et boîtes de nuit. Une vie nocturne surprenante et variée.",
+            title: { fr: "🌃 Antananarivo by night", en: "🌃 Antananarivo by night", it: "🌃 Antananarivo by night" },
+            desc: { fr: "La capitale s'anime la nuit ! Bars branchés, musique live, restaurants chics et boîtes de nuit. Une vie nocturne surprenante et variée.", en: "The capital comes alive at night! Trendy bars, live music, chic restaurants and nightclubs. A surprising and varied nightlife.", it: "La capitale si anima di notte! Bar trendy, musica live, ristoranti chic e discoteche. Una vita notturna sorprendente e variegata." },
             lieux: [
-                { nom: "Le Glacier", type: "Boîte de nuit", desc: "La plus grande boîte de Tana, plusieurs salles, DJ sets. Tenue correcte exigée.", horaires: "22h-05h, ven-sam", prix: "Entrée 10 000 Ar (2€)", conseil: "Arrivez avant 23h les week-ends." },
-                { nom: "KUDeta", type: "Bar lounge", desc: "Terrasse panoramique, cocktails, tapas. Ambiance chic et détendue.", horaires: "18h-01h, tous les jours", prix: "Cocktail 12 000-18 000 Ar", conseil: "Idéal pour un date." },
-                { nom: "Bus Magique", type: "Bar concert", desc: "Musique live, scène ouverte, bières locales. Ambiance décontractée.", horaires: "19h-00h, mer-dim", prix: "Bière 3 000 Ar", conseil: "Venez avec l'esprit ouvert." },
-                { nom: "La Varangue", type: "Restaurant gastronomique", desc: "Cuisine fusion franco-malgache, cadre romantique et raffiné.", horaires: "19h-23h, tous les jours", prix: "Menu 45 000 Ar", conseil: "Réservation obligatoire." }
+                { nom: "Le Glacier", type: { fr: "Boîte de nuit", en: "Nightclub", it: "Discoteca" }, desc: { fr: "La plus grande boîte de Tana, plusieurs salles, DJ sets. Tenue correcte exigée.", en: "The largest club in Tana, several rooms, DJ sets. Proper attire required.", it: "La più grande discoteca di Tana, diverse sale, DJ set. Abbigliamento corretto richiesto." }, horaires: "22h-05h, ven-sam", prix: "Entrée 10 000 Ar (2€)", conseil: { fr: "Arrivez avant 23h les week-ends.", en: "Arrive before 11pm on weekends.", it: "Arrivate prima delle 23h nei weekend." } },
+                { nom: "KUDeta", type: { fr: "Bar lounge", en: "Lounge bar", it: "Bar lounge" }, desc: { fr: "Terrasse panoramique, cocktails, tapas. Ambiance chic et détendue.", en: "Panoramic terrace, cocktails, tapas. Chic and relaxed atmosphere.", it: "Terrazza panoramica, cocktail, tapas. Ambiente chic e rilassato." }, horaires: "18h-01h, tous les jours", prix: "Cocktail 12 000-18 000 Ar", conseil: { fr: "Idéal pour un date.", en: "Perfect for a date.", it: "Ideale per un appuntamento." } },
+                { nom: "Bus Magique", type: { fr: "Bar concert", en: "Concert bar", it: "Bar concerto" }, desc: { fr: "Musique live, scène ouverte, bières locales. Ambiance décontractée.", en: "Live music, open stage, local beers. Relaxed atmosphere.", it: "Musica live, palco aperto, birre locali. Ambiente informale." }, horaires: "19h-00h, mer-dim", prix: "Bière 3 000 Ar", conseil: { fr: "Venez avec l'esprit ouvert.", en: "Come with an open mind.", it: "Venite con la mente aperta." } },
+                { nom: "La Varangue", type: { fr: "Restaurant gastronomique", en: "Gastronomic restaurant", it: "Ristorante gastronomico" }, desc: { fr: "Cuisine fusion franco-malgache, cadre romantique et raffiné.", en: "French-Malagasy fusion cuisine, romantic and refined setting.", it: "Cucina fusion franco-malgascia, ambiente romantico e raffinato." }, horaires: "19h-23h, tous les jours", prix: "Menu 45 000 Ar", conseil: { fr: "Réservation obligatoire.", en: "Reservation required.", it: "Prenotazione obbligatoria." } }
             ]
         },
         nosybe: {
-            title: "🏝️ Nosy Be by night",
-            desc: "L'île aux parfums ne dort jamais ! Plages animées, bars les pieds dans le sable, soirées mémorables sous les étoiles.",
+            title: { fr: "🏝️ Nosy Be by night", en: "🏝️ Nosy Be by night", it: "🏝️ Nosy Be by night" },
+            desc: { fr: "L'île aux parfums ne dort jamais ! Plages animées, bars les pieds dans le sable, soirées mémorables sous les étoiles.", en: "The perfume island never sleeps! Lively beaches, bars with feet in the sand, memorable evenings under the stars.", it: "L'isola dei profumi non dorme mai! Spiagge animate, bar con i piedi nella sabbia, serate memorabili sotto le stelle." },
             lieux: [
-                { nom: "Madirokely Beach", type: "Bars de plage", desc: "Plusieurs bars alignés sur la plage, musique, feu de camp. Cocktails dès 8 000 Ar.", horaires: "18h-02h, tous les jours", prix: "Cocktail 8 000-12 000 Ar", conseil: "Soirées du jeudi les plus animées." },
-                { nom: "Taxi Be", type: "Boîte de nuit", desc: "La boîte mythique de Nosy Be, piste de danse, DJ internationaux.", horaires: "23h-05h, jeu-sam", prix: "Entrée 15 000 Ar", conseil: "Peupler tôt." },
-                { nom: "L'Heure Bleue", type: "Bar lounge", desc: "Coucher de soleil, cocktails, ambiance tamisée et romantique.", horaires: "17h-00h, tous les jours", prix: "Rhums arrangés 10 000 Ar", conseil: "À ne pas manquer." }
+                { nom: "Madirokely Beach", type: { fr: "Bars de plage", en: "Beach bars", it: "Bar sulla spiaggia" }, desc: { fr: "Plusieurs bars alignés sur la plage, musique, feu de camp. Cocktails dès 8 000 Ar.", en: "Several bars lined up on the beach, music, campfire. Cocktails from 8,000 Ar.", it: "Diversi bar allineati sulla spiaggia, musica, falò. Cocktail da 8 000 Ar." }, horaires: "18h-02h, tous les jours", prix: "Cocktail 8 000-12 000 Ar", conseil: { fr: "Soirées du jeudi les plus animées.", en: "Thursday nights are the liveliest.", it: "Le serate del giovedì sono le più animate." } },
+                { nom: "Taxi Be", type: { fr: "Boîte de nuit", en: "Nightclub", it: "Discoteca" }, desc: { fr: "La boîte mythique de Nosy Be, piste de danse, DJ internationaux.", en: "The legendary club of Nosy Be, dance floor, international DJs.", it: "La discoteca mitica di Nosy Be, pista da ballo, DJ internazionali." }, horaires: "23h-05h, jeu-sam", prix: "Entrée 15 000 Ar", conseil: { fr: "Peupler tôt.", en: "Arrive early.", it: "Arrivate presto." } }
             ]
         },
-        majunga: {
-            title: "🌴 Majunga by night",
-            desc: "Ambiance décontractée et authentique. Bars de plage, musique malgache, soirées douces au bord de l'eau.",
-            lieux: [
-                { nom: "Palm Beach Club", type: "Bar dansant", desc: "Sur la plage, cocktails, DJ. L'endroit incontournable de Majunga.", horaires: "20h-02h, ven-dim", prix: "Cocktail 10 000 Ar", conseil: "Venez tôt pour une table face mer." },
-                { nom: "Le Grand Pavois", type: "Restaurant-bar", desc: "Terrasse face à la mer, fruits de mer, coucher de soleil.", horaires: "18h-00h, tous les jours", prix: "Brochette poisson 12 000 Ar", conseil: "Crabe farci spécialité." },
-                { nom: "Sunset Club", type: "Bar ambiance", desc: "Musique live le week-end, rhums arrangés maison.", horaires: "19h-01h, mer-dim", prix: "Rhum 4 000 Ar", conseil: "Meilleur spot coucher soleil." }
-            ]
-        },
-        diego: {
-            title: "🏖️ Diego Suarez by night",
-            desc: "Le Grand Nord a aussi sa vie nocturne ! Bars de plage à Ramena, karaoké, ambiance roots et chaleureuse.",
-            lieux: [
-                { nom: "Bar de Ramena", type: "Bar de plage", desc: "Les pieds dans le sable, bières THB fraîches, fruits de mer.", horaires: "17h-00h, tous les jours", prix: "THB 3 000 Ar", conseil: "Samedi soir feu d'artifice." },
-                { nom: "Le Melville", type: "Bar karaoké", desc: "Karaoké, billard, ambiance conviviale et familiale.", horaires: "19h-01h, tous les jours", prix: "Entrée gratuite, conso 4 000 Ar", conseil: "Chantez du Céline Dion." }
-            ]
-        },
-        tamatave: {
-            title: "🌊 Tamatave by night",
-            desc: "L'ambiance portuaire de la côte Est. Bars simples, bonne humeur, rencontres locales inoubliables.",
-            lieux: [
-                { nom: "Coconut Lounge", type: "Bar branché", desc: "Le rendez-vous des expats et locaux. Tapas, cocktails.", horaires: "18h-00h, tous les jours", prix: "Tapas 6 000-10 000 Ar", conseil: "Happy hour 18h-20h." },
-                { nom: "Le Long du Canal", type: "Bars ambulants", desc: "Petits stands de brochettes et bières le long du canal. Ambiance populaire.", horaires: "18h-22h, tous les jours", prix: "Brochette 1 500 Ar", conseil: "Partagez avec les locaux." }
-            ]
-        }
+        majunga: { title: { fr: "🌴 Majunga by night", en: "🌴 Majunga by night", it: "🌴 Majunga by night" }, desc: { fr: "Ambiance décontractée et authentique.", en: "Relaxed and authentic atmosphere.", it: "Ambiente informale e autentico." }, lieux: [] },
+        diego: { title: { fr: "🏖️ Diego Suarez by night", en: "🏖️ Diego Suarez by night", it: "🏖️ Diego Suarez by night" }, desc: { fr: "Le Grand Nord a aussi sa vie nocturne !", en: "The Great North also has its nightlife!", it: "Anche il Grande Nord ha la sua vita notturna!" }, lieux: [] },
+        tamatave: { title: { fr: "🌊 Tamatave by night", en: "🌊 Tamatave by night", it: "🌊 Tamatave by night" }, desc: { fr: "L'ambiance portuaire de la côte Est.", en: "The port atmosphere of the East Coast.", it: "L'atmosfera portuale della costa Est." }, lieux: [] }
     };
 
     const destinationsData = [
-        { name:"Antananarivo (Tana)", desc:"Capitale animée, marchés colorés, artisanat, palais de la Reine.", image:"https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/2d033167-7190-e647-ae4c-ceca51b64248.jpg", badge:"Capitale", meteo:"🌦️ Année", duree:"2-4 jours", activites:"🏛️ Rova, Croc Farm, marché Digue", key:"tana" },
-        { name:"Nosy Be", desc:"Plages paradisiaques, snorkeling, lémuriens, épices.", image:"https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=600", badge:"Paradis", meteo:"☀️ Mai-Déc", duree:"4-7 jours", activites:"🏝️ Plongée, Nosy Komba", key:"nosybe" },
-        { name:"Majunga", desc:"Baobab amoureux, plages sauvages, rocher noir.", image:"https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/bb0afd1f-83f7-e8a9-66ac-8785897379d2.jpg", badge:"Coup de cœur", meteo:"☀️ Avril-Nov", duree:"3-5 jours", activites:"💑 Baobabs, marché Kijana", key:"majunga" },
-        { name:"Diego Suarez", desc:"Baie des Dunes, mer émeraude, randonnées.", image:"https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/411e8063-e643-9350-b5cf-231145f5f992.jpg", badge:"Grand Nord", meteo:"☀️ Mai-Nov", duree:"3-5 jours", activites:"🏖️ Mer Émeraude", key:"diego" },
-        { name:"Tamatave (Toamasina)", desc:"Port historique, canaux, plages.", image:"https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/198b7106-ac1d-5ffe-9602-a0a47cae4950.jpg", badge:"Authentique", meteo:"🌦️ Année", duree:"2-3 jours", activites:"🛶 Canal, Foulpointe", key:"tamatave" }
+        { name: "Antananarivo (Tana)", desc: { fr: "Capitale animée, marchés colorés, artisanat, palais de la Reine.", en: "Lively capital, colorful markets, crafts, Queen's Palace.", it: "Capitale animata, mercati colorati, artigianato, palazzo della Regina." }, image: "https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/2d033167-7190-e647-ae4c-ceca51b64248.jpg", badge: "Capitale", meteo: { fr: "🌦️ Année", en: "🌦️ Year", it: "🌦️ Anno" }, duree: { fr: "2-4 jours", en: "2-4 days", it: "2-4 giorni" }, activites: { fr: "🏛️ Rova, Croc Farm, marché Digue", en: "🏛️ Rova, Croc Farm, Digue market", it: "🏛️ Rova, Croc Farm, mercato Digue" }, key: "tana" },
+        { name: "Nosy Be", desc: { fr: "Plages paradisiaques, snorkeling, lémuriens, épices.", en: "Paradise beaches, snorkeling, lemurs, spices.", it: "Spiagge paradisiache, snorkeling, lemuri, spezie." }, image: "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=600", badge: "Paradis", meteo: { fr: "☀️ Mai-Déc", en: "☀️ May-Dec", it: "☀️ Mag-Dic" }, duree: { fr: "4-7 jours", en: "4-7 days", it: "4-7 giorni" }, activites: { fr: "🏝️ Plongée, Nosy Komba", en: "🏝️ Diving, Nosy Komba", it: "🏝️ Immersioni, Nosy Komba" }, key: "nosybe" },
+        { name: "Majunga", desc: { fr: "Baobab amoureux, plages sauvages, rocher noir.", en: "Lovers' Baobabs, wild beaches, black rock.", it: "Baobab innamorati, spiagge selvagge, roccia nera." }, image: "https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/bb0afd1f-83f7-e8a9-66ac-8785897379d2.jpg", badge: "Coup de cœur", meteo: { fr: "☀️ Avril-Nov", en: "☀️ Apr-Nov", it: "☀️ Apr-Nov" }, duree: { fr: "3-5 jours", en: "3-5 days", it: "3-5 giorni" }, activites: { fr: "💑 Baobabs, marché Kijana", en: "💑 Baobabs, Kijana market", it: "💑 Baobab, mercato Kijana" }, key: "majunga" },
+        { name: "Diego Suarez", desc: { fr: "Baie des Dunes, mer émeraude, randonnées.", en: "Dunes Bay, emerald sea, hikes.", it: "Baia delle Dune, mare smeraldo, trekking." }, image: "https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/411e8063-e643-9350-b5cf-231145f5f992.jpg", badge: "Grand Nord", meteo: { fr: "☀️ Mai-Nov", en: "☀️ May-Nov", it: "☀️ Mag-Nov" }, duree: { fr: "3-5 jours", en: "3-5 days", it: "3-5 giorni" }, activites: { fr: "🏖️ Mer Émeraude", en: "🏖️ Emerald Sea", it: "🏖️ Mare Smeraldo" }, key: "diego" },
+        { name: "Tamatave (Toamasina)", desc: { fr: "Port historique, canaux, plages.", en: "Historic port, canals, beaches.", it: "Porto storico, canali, spiagge." }, image: "https://mcusercontent.com/40a9f1a77d46874eba2309d88/images/198b7106-ac1d-5ffe-9602-a0a47cae4950.jpg", badge: "Authentique", meteo: { fr: "🌦️ Année", en: "🌦️ Year", it: "🌦️ Anno" }, duree: { fr: "2-3 jours", en: "2-3 days", it: "2-3 giorni" }, activites: { fr: "🛶 Canal, Foulpointe", en: "🛶 Canal, Foulpointe", it: "🛶 Canale, Foulpointe" }, key: "tamatave" }
     ];
 
     const formulesDetailData = {
         confort: {
-            titre: "⭐ Formule Confort",
-            slogan: "Le meilleur rapport qualité-prix pour découvrir Madagascar",
-            description: "Voyagez confortablement avec un guide privé, un 4x4 climatisé et des hôtels soigneusement sélectionnés.",
+            titre: { fr: "⭐ Formule Confort", en: "⭐ Comfort Formula", it: "⭐ Formula Confort" },
+            slogan: { fr: "Le meilleur rapport qualité-prix pour découvrir Madagascar", en: "The best value for money to discover Madagascar", it: "Il miglior rapporto qualità-prezzo per scoprire Madagascar" },
+            description: { fr: "Voyagez confortablement avec un guide privé, un 4x4 climatisé et des hôtels soigneusement sélectionnés.", en: "Travel comfortably with a private guide, an air-conditioned 4x4 and carefully selected hotels.", it: "Viaggia comodamente con una guida privata, un 4x4 climatizzato e hotel accuratamente selezionati." },
             details: [
-                { label: "Guide Randria", valeur: "28€/jour", desc: "Guide francophone disponible 24h/24" },
-                { label: "Transport", valeur: "22€/jour", desc: "4x4 Toyota Hilux climatisé, essence incluse" },
-                { label: "Hébergement", valeur: "25€/jour", desc: "Hôtels 2-3 étoiles propres et bien situés" },
-                { label: "Repas", valeur: "12€/jour", desc: "Restaurants typiques sélectionnés" },
-                { label: "Activités", valeur: "15€/jour", desc: "Visites guidées des sites incontournables" }
+                { label: { fr: "Guide Randria", en: "Guide Randria", it: "Guida Randria" }, valeur: "28€/jour", desc: { fr: "Guide francophone disponible 24h/24", en: "French-speaking guide available 24/7", it: "Guida francofona disponibile 24h/24" } },
+                { label: { fr: "Transport", en: "Transport", it: "Trasporto" }, valeur: "22€/jour", desc: { fr: "4x4 Toyota Hilux climatisé, essence incluse", en: "Air-conditioned Toyota Hilux 4x4, fuel included", it: "4x4 Toyota Hilux climatizzato, benzina inclusa" } },
+                { label: { fr: "Hébergement", en: "Accommodation", it: "Alloggio" }, valeur: "25€/jour", desc: { fr: "Hôtels 2-3 étoiles propres et bien situés", en: "Clean and well-located 2-3 star hotels", it: "Hotel 2-3 stelle puliti e ben posizionati" } },
+                { label: { fr: "Repas", en: "Meals", it: "Pasti" }, valeur: "12€/jour", desc: { fr: "Restaurants typiques sélectionnés", en: "Selected typical restaurants", it: "Ristoranti tipici selezionati" } },
+                { label: { fr: "Activités", en: "Activities", it: "Attività" }, valeur: "15€/jour", desc: { fr: "Visites guidées des sites incontournables", en: "Guided tours of must-see sites", it: "Visite guidate dei siti imperdibili" } }
             ],
             total: "102€/jour",
             image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=600"
         },
         premium: {
-            titre: "🌟 Formule Premium",
-            slogan: "L'excellence pour les voyageurs exigeants",
-            description: "Lodges de charme, gastronomie raffinée, expériences exclusives. Tout est pensé pour votre confort.",
+            titre: { fr: "🌟 Formule Premium", en: "🌟 Premium Formula", it: "🌟 Formula Premium" },
+            slogan: { fr: "L'excellence pour les voyageurs exigeants", en: "Excellence for demanding travelers", it: "L'eccellenza per i viaggiatori esigenti" },
+            description: { fr: "Lodges de charme, gastronomie raffinée, expériences exclusives. Tout est pensé pour votre confort.", en: "Charming lodges, refined gastronomy, exclusive experiences. Everything is designed for your comfort.", it: "Lodge di charme, gastronomia raffinata, esperienze esclusive. Tutto è pensato per il vostro comfort." },
             details: [
-                { label: "Guide Randria", valeur: "38€/jour", desc: "Guide expert dédié, conseils personnalisés" },
-                { label: "Transport", valeur: "35€/jour", desc: "4x4 haut de gamme, sièges cuir, wifi à bord" },
-                { label: "Hébergement", valeur: "40€/jour", desc: "Lodges de charme avec piscine et spa" },
-                { label: "Repas", valeur: "20€/jour", desc: "Demi-pension en restaurants gastronomiques" },
-                { label: "Activités", valeur: "22€/jour", desc: "Expériences exclusives, guides spécialisés" }
+                { label: { fr: "Guide Randria", en: "Guide Randria", it: "Guida Randria" }, valeur: "38€/jour", desc: { fr: "Guide expert dédié, conseils personnalisés", en: "Dedicated expert guide, personalized advice", it: "Guida esperta dedicata, consigli personalizzati" } },
+                { label: { fr: "Transport", en: "Transport", it: "Trasporto" }, valeur: "35€/jour", desc: { fr: "4x4 haut de gamme, sièges cuir, wifi à bord", en: "High-end 4x4, leather seats, onboard wifi", it: "4x4 di alta gamma, sedili in pelle, wifi a bordo" } },
+                { label: { fr: "Hébergement", en: "Accommodation", it: "Alloggio" }, valeur: "40€/jour", desc: { fr: "Lodges de charme avec piscine et spa", en: "Charming lodges with pool and spa", it: "Lodge di charme con piscina e spa" } },
+                { label: { fr: "Repas", en: "Meals", it: "Pasti" }, valeur: "20€/jour", desc: { fr: "Demi-pension en restaurants gastronomiques", en: "Half-board in gastronomic restaurants", it: "Mezza pensione in ristoranti gastronomici" } },
+                { label: { fr: "Activités", en: "Activities", it: "Attività" }, valeur: "22€/jour", desc: { fr: "Expériences exclusives, guides spécialisés", en: "Exclusive experiences, specialized guides", it: "Esperienze esclusive, guide specializzate" } }
             ],
             total: "155€/jour",
             image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600"
         },
         luxe: {
-            titre: "👑 Formule Luxe",
-            slogan: "L'exception malgache, rien que pour vous",
-            description: "Resorts 5 étoiles, 4x4 de luxe avec chauffeur, chef privé. Le summum du voyage à Madagascar.",
+            titre: { fr: "👑 Formule Luxe", en: "👑 Luxury Formula", it: "👑 Formula Lusso" },
+            slogan: { fr: "L'exception malgache, rien que pour vous", en: "The Malagasy exception, just for you", it: "L'eccezione malgascia, solo per voi" },
+            description: { fr: "Resorts 5 étoiles, 4x4 de luxe avec chauffeur, chef privé. Le summum du voyage à Madagascar.", en: "5-star resorts, luxury 4x4 with driver, private chef. The ultimate trip to Madagascar.", it: "Resort 5 stelle, 4x4 di lusso con autista, chef privato. Il massimo del viaggio in Madagascar." },
             details: [
-                { label: "Guide Randria", valeur: "55€/jour", desc: "Guide dédié exclusif, disponibilité absolue" },
-                { label: "Transport", valeur: "55€/jour", desc: "4x4 luxe avec chauffeur privé, boissons à bord" },
-                { label: "Hébergement", valeur: "65€/jour", desc: "Resorts 5*, villas privées, service irréprochable" },
-                { label: "Repas", valeur: "30€/jour", desc: "Pension complète, chef privé sur demande" },
-                { label: "Activités", valeur: "28€/jour", desc: "Sur mesure : hélicoptère, yacht, guide naturaliste" }
+                { label: { fr: "Guide Randria", en: "Guide Randria", it: "Guida Randria" }, valeur: "55€/jour", desc: { fr: "Guide dédié exclusif, disponibilité absolue", en: "Exclusive dedicated guide, absolute availability", it: "Guida dedicata esclusiva, disponibilità assoluta" } },
+                { label: { fr: "Transport", en: "Transport", it: "Trasporto" }, valeur: "55€/jour", desc: { fr: "4x4 luxe avec chauffeur privé, boissons à bord", en: "Luxury 4x4 with private driver, drinks on board", it: "4x4 lusso con autista privato, bevande a bordo" } },
+                { label: { fr: "Hébergement", en: "Accommodation", it: "Alloggio" }, valeur: "65€/jour", desc: { fr: "Resorts 5*, villas privées, service irréprochable", en: "5* resorts, private villas, impeccable service", it: "Resort 5*, ville private, servizio impeccabile" } },
+                { label: { fr: "Repas", en: "Meals", it: "Pasti" }, valeur: "30€/jour", desc: { fr: "Pension complète, chef privé sur demande", en: "Full board, private chef on request", it: "Pensione completa, chef privato su richiesta" } },
+                { label: { fr: "Activités", en: "Activities", it: "Attività" }, valeur: "28€/jour", desc: { fr: "Sur mesure : hélicoptère, yacht, guide naturaliste", en: "Tailor-made: helicopter, yacht, naturalist guide", it: "Su misura: elicottero, yacht, guida naturalistica" } }
             ],
             total: "233€/jour",
             image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600"
@@ -1220,44 +1321,44 @@
     };
 
     const servicesData = [
-        { name:"Formule Confort", desc:"Guide privé, 4x4 climatisé, hôtels 2-3*. Le meilleur rapport qualité-prix.", badge:"⭐ Confort", formula:"confort" },
-        { name:"Formule Premium", desc:"Lodges de charme, gastronomie, expériences exclusives.", badge:"🌟 Premium", formula:"premium" },
-        { name:"Formule Luxe", desc:"Resorts 5*, 4x4 luxe, chef privé. L'excellence absolue.", badge:"👑 Luxe", formula:"luxe" }
+        { name: { fr: "Formule Confort", en: "Comfort Formula", it: "Formula Confort" }, desc: { fr: "Guide privé, 4x4 climatisé, hôtels 2-3*. Le meilleur rapport qualité-prix.", en: "Private guide, air-conditioned 4x4, 2-3* hotels. Best value for money.", it: "Guida privata, 4x4 climatizzato, hotel 2-3*. Il miglior rapporto qualità-prezzo." }, badge: "⭐ Confort", formula: "confort" },
+        { name: { fr: "Formule Premium", en: "Premium Formula", it: "Formula Premium" }, desc: { fr: "Lodges de charme, gastronomie, expériences exclusives.", en: "Charming lodges, gastronomy, exclusive experiences.", it: "Lodge di charme, gastronomia, esperienze esclusive." }, badge: "🌟 Premium", formula: "premium" },
+        { name: { fr: "Formule Luxe", en: "Luxury Formula", it: "Formula Lusso" }, desc: { fr: "Resorts 5*, 4x4 luxe, chef privé. L'excellence absolue.", en: "5* resorts, luxury 4x4, private chef. Absolute excellence.", it: "Resort 5*, 4x4 lusso, chef privato. L'eccellenza assoluta." }, badge: "👑 Luxe", formula: "luxe" }
     ];
 
     const partnersData = [
-        { name:"Tsiky Trans", type:"Location 4x4", desc:"Flotte de Toyota Hilux récents, conducteurs expérimentés.", contact:"+261 34 12 345 67" },
-        { name:"Villa Baobab", type:"Hébergement", desc:"Lodge de charme à Majunga face à la mer.", contact:"Via Randria" },
-        { name:"MadaBike", type:"Moto/Quad", desc:"Location motos 125cc et quads.", contact:"Sur place" },
-        { name:"Local Food Tour", type:"Cuisine", desc:"Cours de cuisine malgache avec Mamy.", contact:"Sur réservation" }
+        { name: "Tsiky Trans", type: { fr: "Location 4x4", en: "4x4 Rental", it: "Noleggio 4x4" }, desc: { fr: "Flotte de Toyota Hilux récents, conducteurs expérimentés.", en: "Fleet of recent Toyota Hilux, experienced drivers.", it: "Flotta di Toyota Hilux recenti, autisti esperti." }, contact: "+261 34 12 345 67" },
+        { name: "Villa Baobab", type: { fr: "Hébergement", en: "Accommodation", it: "Alloggio" }, desc: { fr: "Lodge de charme à Majunga face à la mer.", en: "Charming lodge in Majunga facing the sea.", it: "Lodge di charme a Majunga vista mare." }, contact: "Via Randria" },
+        { name: "MadaBike", type: { fr: "Moto/Quad", en: "Motorcycle/Quad", it: "Moto/Quad" }, desc: { fr: "Location motos 125cc et quads.", en: "125cc motorcycle and quad rental.", it: "Noleggio moto 125cc e quad." }, contact: "Sur place" },
+        { name: "Local Food Tour", type: { fr: "Cuisine", en: "Cooking", it: "Cucina" }, desc: { fr: "Cours de cuisine malgache avec Mamy.", en: "Malagasy cooking class with Mamy.", it: "Corso di cucina malgascia con Mamy." }, contact: "Sur réservation" }
     ];
 
     const transportDetailsData = {
-        tana: [{ title:"🛬 Ivato → Centre-ville", desc:"Transfert privé 4x4.", prix:"40 000 Ar (8€)", roots:"Taxi-brousse : 5 000 Ar" }],
-        majunga: [{ title:"🛬 Aéroport → Ville", desc:"Transfert privé.", prix:"25 000 Ar (5€)", roots:"Taxi : 5 000 Ar" }],
-        nosybe: [{ title:"🛬 Fascene → Hell-Ville", desc:"Transfert privé.", prix:"35 000 Ar (7€)", roots:"Taxi : 5 000 Ar" }],
-        diego: [{ title:"🛬 Aéroport → Centre", desc:"Transfert privé.", prix:"25 000 Ar (5€)", roots:"Taxi : 5 000 Ar" }],
-        tamatave: [{ title:"🛬 Aéroport → Centre", desc:"Transfert privé.", prix:"20 000 Ar (4€)", roots:"Taxi : 3 000 Ar" }]
+        tana: [{ title: { fr: "🛬 Ivato → Centre-ville", en: "🛬 Ivato → City Center", it: "🛬 Ivato → Centro città" }, desc: { fr: "Transfert privé 4x4.", en: "Private 4x4 transfer.", it: "Trasferimento privato 4x4." }, prix: "40 000 Ar (8€)", roots: "Taxi-brousse : 5 000 Ar" }],
+        majunga: [{ title: { fr: "🛬 Aéroport → Ville", en: "🛬 Airport → City", it: "🛬 Aeroporto → Città" }, desc: { fr: "Transfert privé.", en: "Private transfer.", it: "Trasferimento privato." }, prix: "25 000 Ar (5€)", roots: "Taxi : 5 000 Ar" }],
+        nosybe: [{ title: { fr: "🛬 Fascene → Hell-Ville", en: "🛬 Fascene → Hell-Ville", it: "🛬 Fascene → Hell-Ville" }, desc: { fr: "Transfert privé.", en: "Private transfer.", it: "Trasferimento privato." }, prix: "35 000 Ar (7€)", roots: "Taxi : 5 000 Ar" }],
+        diego: [{ title: { fr: "🛬 Aéroport → Centre", en: "🛬 Airport → Center", it: "🛬 Aeroporto → Centro" }, desc: { fr: "Transfert privé.", en: "Private transfer.", it: "Trasferimento privato." }, prix: "25 000 Ar (5€)", roots: "Taxi : 5 000 Ar" }],
+        tamatave: [{ title: { fr: "🛬 Aéroport → Centre", en: "🛬 Airport → Center", it: "🛬 Aeroporto → Centro" }, desc: { fr: "Transfert privé.", en: "Private transfer.", it: "Trasferimento privato." }, prix: "20 000 Ar (4€)", roots: "Taxi : 3 000 Ar" }]
     };
 
     const faqData = [
-        { q:"Où est basé Randria ?", a:"Entre Tana et Majunga. Il se déplace sur tout Madagascar. Junga Tour couvre toute l'île." },
-        { q:"Comment payer ?", a:"Acompte en ligne : 30€ frais dossier + 30% du solde. Le reste sur place à Randria." },
-        { q:"Meilleure période ?", a:"Avril à novembre (saison sèche). Baleines à Nosy Be en juillet-août." },
-        { q:"Faut-il un visa ?", a:"Oui, 35€ à l'arrivée pour 30 jours. Passeport valide 6 mois." },
-        { q:"Les guides sont-ils formés aux premiers secours ?", a:"<strong>Oui !</strong> Tous nos guides HOLDEST sont formés aux gestes qui sauvent : RCP, PLS, soins des plaies, étouffement, malaise, fractures, brûlures. Chaque guide a une <strong>trousse de secours complète</strong> et connaît les hôpitaux locaux." },
-        { q:"Que se passe-t-il si mon vol a du retard ?", a:"<strong>L'attente est GRATUITE et illimitée.</strong> Randria suit votre vol en temps réel. Même à 2h du matin, il sera là avec un panneau à votre nom. Aucun supplément, c'est notre engagement HOLDEST." },
-        { q:"Quels sont les avis TripAdvisor ?", a:"Junga Tour est noté <strong>5/5 étoiles</strong> sur TripAdvisor. Les voyageurs saluent l'authenticité, la gentillesse et la fiabilité du guide Randria. Plus de 50 avis positifs." },
-        { q:"Que signifie 'Mora Mora' ?", a:"C'est l'art de prendre son temps, de ne pas stresser. À Madagascar, tout se fait 'mora mora' (doucement). Randria vous apprendra à apprécier ce rythme de vie." },
-        { q:"Quelle est votre politique d'annulation ?", a:"<strong>Garantie HOLDEST :</strong> Annulation J-7 = remboursement 100% (hors 30€ dossier). Annulation J-2 = remboursement 50%. Intempéries = activité reportée ou remboursement partiel. Annulation par HOLDEST = remboursement intégral." }
+        { q: { fr: "Où est basé Randria ?", en: "Where is Randria based?", it: "Dove ha base Randria?" }, a: { fr: "Entre Tana et Majunga. Il se déplace sur tout Madagascar. Junga Tour couvre toute l'île.", en: "Between Tana and Majunga. He travels all over Madagascar. Junga Tour covers the whole island.", it: "Tra Tana e Majunga. Si sposta in tutto il Madagascar. Junga Tour copre tutta l'isola." } },
+        { q: { fr: "Comment payer ?", en: "How to pay?", it: "Come pagare?" }, a: { fr: "Acompte en ligne : 30€ frais dossier + 30% du solde. Le reste sur place à Randria.", en: "Online deposit: 30€ dossier fee + 30% of the balance. The rest on site with Randria.", it: "Acconto online: 30€ tassa pratica + 30% del saldo. Il resto sul posto a Randria." } },
+        { q: { fr: "Meilleure période ?", en: "Best period?", it: "Periodo migliore?" }, a: { fr: "Avril à novembre (saison sèche). Baleines à Nosy Be en juillet-août.", en: "April to November (dry season). Whales in Nosy Be in July-August.", it: "Aprile a novembre (stagione secca). Balene a Nosy Be in luglio-agosto." } },
+        { q: { fr: "Faut-il un visa ?", en: "Is a visa required?", it: "Serve il visto?" }, a: { fr: "Oui, 35€ à l'arrivée pour 30 jours. Passeport valide 6 mois.", en: "Yes, 35€ on arrival for 30 days. Passport valid for 6 months.", it: "Sì, 35€ all'arrivo per 30 giorni. Passaporto valido 6 mesi." } },
+        { q: { fr: "Les guides sont-ils formés aux premiers secours ?", en: "Are the guides trained in first aid?", it: "Le guide sono formate al primo soccorso?" }, a: { fr: "<strong>Oui !</strong> Tous nos guides HOLDEST sont formés aux gestes qui sauvent.", en: "<strong>Yes!</strong> All our HOLDEST guides are trained in life-saving techniques.", it: "<strong>Sì!</strong> Tutte le nostre guide HOLDEST sono formate alle manovre salvavita." } },
+        { q: { fr: "Que se passe-t-il si mon vol a du retard ?", en: "What happens if my flight is delayed?", it: "Cosa succede se il mio volo è in ritardo?" }, a: { fr: "<strong>L'attente est GRATUITE et illimitée.</strong> Randria suit votre vol en temps réel.", en: "<strong>Waiting is FREE and unlimited.</strong> Randria tracks your flight in real time.", it: "<strong>L'attesa è GRATUITA e illimitata.</strong> Randria segue il tuo volo in tempo reale." } },
+        { q: { fr: "Quels sont les avis TripAdvisor ?", en: "What are the TripAdvisor reviews?", it: "Quali sono le recensioni TripAdvisor?" }, a: { fr: "Junga Tour est noté <strong>5/5 étoiles</strong> sur TripAdvisor.", en: "Junga Tour is rated <strong>5/5 stars</strong> on TripAdvisor.", it: "Junga Tour è valutato <strong>5/5 stelle</strong> su TripAdvisor." } },
+        { q: { fr: "Que signifie 'Mora Mora' ?", en: "What does 'Mora Mora' mean?", it: "Cosa significa 'Mora Mora'?" }, a: { fr: "C'est l'art de prendre son temps, de ne pas stresser.", en: "It's the art of taking your time, not stressing.", it: "È l'arte di prendersi il proprio tempo, di non stressarsi." } },
+        { q: { fr: "Quelle est votre politique d'annulation ?", en: "What is your cancellation policy?", it: "Qual è la vostra politica di cancellazione?" }, a: { fr: "<strong>Garantie HOLDEST :</strong> Annulation J-7 = remboursement 100% (hors 30€ dossier).", en: "<strong>HOLDEST Guarantee:</strong> Cancellation D-7 = 100% refund (excl. 30€ fee).", it: "<strong>Garanzia HOLDEST:</strong> Cancellazione D-7 = rimborso 100% (escl. 30€ pratica)." } }
     ];
 
     const testimonialsData = [
-        { text:"Randria, un frère. Il m'a fait découvrir le vrai Madagascar. Inoubliable.", author:"Sophie & Marc (Paris)", stars:5, source:"TripAdvisor" },
-        { text:"Trip roots incroyable. On se sent en sécurité et privilégié. Randria connaît tous les bons plans.", author:"Luca (Italie)", stars:5, source:"TripAdvisor" },
-        { text:"HOLDEST a tout organisé parfaitement. Randria est d'une gentillesse rare. Je recommande les yeux fermés.", author:"Claire & Julien (Lyon)", stars:5, source:"Google" },
-        { text:"Meilleur guide de Madagascar ! Professionnel, ponctuel, flexible. Il nous a fait vivre des moments magiques.", author:"Thomas & Marine (Bordeaux)", stars:5, source:"TripAdvisor" },
-        { text:"Un séjour sur mesure exceptionnel. Randria s'est adapté à nos envies et à notre budget. Merci !", author:"Isabelle (Genève)", stars:5, source:"TripAdvisor" }
+        { text: { fr: "Randria, un frère. Il m'a fait découvrir le vrai Madagascar. Inoubliable.", en: "Randria, a brother. He made me discover the real Madagascar. Unforgettable.", it: "Randria, un fratello. Mi ha fatto scoprire il vero Madagascar. Indimenticabile." }, author: "Sophie & Marc (Paris)", stars: 5, source: "TripAdvisor" },
+        { text: { fr: "Trip roots incroyable. On se sent en sécurité et privilégié.", en: "Incredible roots trip. We feel safe and privileged.", it: "Viaggio roots incredibile. Ci si sente sicuri e privilegiati." }, author: "Luca (Italie)", stars: 5, source: "TripAdvisor" },
+        { text: { fr: "HOLDEST a tout organisé parfaitement. Randria est d'une gentillesse rare.", en: "HOLDEST organized everything perfectly. Randria is extremely kind.", it: "HOLDEST ha organizzato tutto perfettamente. Randria è di una gentilezza rara." }, author: "Claire & Julien (Lyon)", stars: 5, source: "Google" },
+        { text: { fr: "Meilleur guide de Madagascar ! Professionnel, ponctuel, flexible.", en: "Best guide in Madagascar! Professional, punctual, flexible.", it: "Migliore guida del Madagascar! Professionale, puntuale, flessibile." }, author: "Thomas & Marine (Bordeaux)", stars: 5, source: "TripAdvisor" },
+        { text: { fr: "Un séjour sur mesure exceptionnel. Randria s'est adapté à nos envies.", en: "An exceptional tailor-made stay. Randria adapted to our desires.", it: "Un soggiorno su misura eccezionale. Randria si è adattato ai nostri desideri." }, author: "Isabelle (Genève)", stars: 5, source: "TripAdvisor" }
     ];
 
     // ==================== FONCTIONS ====================
@@ -1269,11 +1370,11 @@
         setTimeout(() => toast.remove(), 3000);
     }
 
-    function openModal(id) { 
+    function openModal(id) {
         const modal = document.getElementById(id);
         if (modal) modal.classList.add('active');
     }
-    function closeModal(id) { 
+    function closeModal(id) {
         const modal = document.getElementById(id);
         if (modal) modal.classList.remove('active');
     }
@@ -1289,34 +1390,34 @@
 
     function showSecuriteModal() {
         document.getElementById('securiteContent').innerHTML = `
-            <h3><i class="fas fa-first-aid" style="color:#2980b9;"></i> 🛡️ Sécurité & Santé</h3>
-            <p style="margin-bottom:16px;"><strong>Tous les guides HOLDEST × Junga Tour</strong> sont formés aux gestes qui sauvent. Voici leurs compétences :</p>
+            <h3><i class="fas fa-first-aid" style="color:#2980b9;"></i> 🛡️ ${currentLang === 'fr' ? 'Sécurité & Santé' : currentLang === 'en' ? 'Safety & Health' : 'Sicurezza & Salute'}</h3>
+            <p style="margin-bottom:16px;"><strong>${currentLang === 'fr' ? 'Tous les guides HOLDEST × Junga Tour sont formés aux gestes qui sauvent.' : currentLang === 'en' ? 'All HOLDEST × Junga Tour guides are trained in first aid.' : 'Tutte le guide HOLDEST × Junga Tour sono formate al primo soccorso.'}</strong></p>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
-                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-heartbeat" style="color:#e74c3c; font-size:1.5rem; display:block; margin-bottom:4px;"></i>Massage cardiaque (RCP)</div>
-                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-bed" style="color:#2980b9; font-size:1.5rem; display:block; margin-bottom:4px;"></i>Position latérale de sécurité</div>
-                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-band-aid" style="color:#27ae60; font-size:1.5rem; display:block; margin-bottom:4px;"></i>Soins des plaies</div>
-                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-lungs" style="color:#e74c3c; font-size:1.5rem; display:block; margin-bottom:4px;"></i>Gestion étouffement</div>
-                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-bone" style="color:#f39c12; font-size:1.5rem; display:block; margin-bottom:4px;"></i>Fractures & brûlures</div>
-                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-bug" style="color:#27ae60; font-size:1.5rem; display:block; margin-bottom:4px;"></i>Piqûres & morsures</div>
+                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-heartbeat" style="color:#e74c3c; font-size:1.5rem; display:block; margin-bottom:4px;"></i>${currentLang === 'fr' ? 'Massage cardiaque (RCP)' : currentLang === 'en' ? 'Cardiac massage (CPR)' : 'Massaggio cardiaco (RCP)'}</div>
+                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-bed" style="color:#2980b9; font-size:1.5rem; display:block; margin-bottom:4px;"></i>${currentLang === 'fr' ? 'Position latérale de sécurité' : currentLang === 'en' ? 'Recovery position' : 'Posizione laterale di sicurezza'}</div>
+                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-band-aid" style="color:#27ae60; font-size:1.5rem; display:block; margin-bottom:4px;"></i>${currentLang === 'fr' ? 'Soins des plaies' : currentLang === 'en' ? 'Wound care' : 'Cura delle ferite'}</div>
+                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-lungs" style="color:#e74c3c; font-size:1.5rem; display:block; margin-bottom:4px;"></i>${currentLang === 'fr' ? 'Gestion étouffement' : currentLang === 'en' ? 'Choking management' : 'Gestione soffocamento'}</div>
+                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-bone" style="color:#f39c12; font-size:1.5rem; display:block; margin-bottom:4px;"></i>${currentLang === 'fr' ? 'Fractures & brûlures' : currentLang === 'en' ? 'Fractures & burns' : 'Fratture & ustioni'}</div>
+                <div style="background:#f0f8ff; padding:10px; border-radius:12px; text-align:center;"><i class="fas fa-bug" style="color:#27ae60; font-size:1.5rem; display:block; margin-bottom:4px;"></i>${currentLang === 'fr' ? 'Piqûres & morsures' : currentLang === 'en' ? 'Stings & bites' : 'Punture & morsi'}</div>
             </div>
-            <p style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-medkit" style="color:#e74c3c;"></i> <strong>Trousse de secours complète</strong> dans chaque véhicule.</p>
-            <p style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-hospital" style="color:#2980b9;"></i> <strong>Connaissance des hôpitaux et cliniques</strong> de chaque région.</p>
-            <button class="btn-full" style="background:#ddd;" onclick="closeModal('securiteModal')">Fermer</button>
+            <p style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-medkit" style="color:#e74c3c;"></i> <strong>${currentLang === 'fr' ? 'Trousse de secours complète' : currentLang === 'en' ? 'Complete first aid kit' : 'Kit di pronto soccorso completo'}</strong> ${currentLang === 'fr' ? 'dans chaque véhicule' : currentLang === 'en' ? 'in every vehicle' : 'in ogni veicolo'}.</p>
+            <p style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-hospital" style="color:#2980b9;"></i> <strong>${currentLang === 'fr' ? 'Connaissance des hôpitaux et cliniques' : currentLang === 'en' ? 'Knowledge of hospitals and clinics' : 'Conoscenza degli ospedali e cliniche'}</strong> ${currentLang === 'fr' ? 'de chaque région' : currentLang === 'en' ? 'in each region' : 'di ogni regione'}.</p>
+            <button class="btn-full" style="background:#ddd;" onclick="closeModal('securiteModal')">${currentLang === 'fr' ? 'Fermer' : currentLang === 'en' ? 'Close' : 'Chiudi'}</button>
         `;
         openModal('securiteModal');
     }
 
     function showRetardModal() {
         document.getElementById('retardContent').innerHTML = `
-            <h3><i class="fas fa-clock" style="color:#f0c040;"></i> ⏰ Vol retardé ? Pas de panique !</h3>
-            <p style="font-size:1.1rem; margin-bottom:16px;"><strong>L'attente est TOTALEMENT GRATUITE.</strong></p>
-            <p style="margin-bottom:12px;">Randria suit votre vol en temps réel. Si votre avion a du retard, il vous attendra <strong>sans aucun frais supplémentaire</strong>, quelle que soit l'heure d'arrivée.</p>
+            <h3><i class="fas fa-clock" style="color:#f0c040;"></i> ⏰ ${currentLang === 'fr' ? 'Vol retardé ? Pas de panique !' : currentLang === 'en' ? 'Flight Delayed? Don\'t Panic!' : 'Volo in ritardo? Niente panico!'}</h3>
+            <p style="font-size:1.1rem; margin-bottom:16px;"><strong>${currentLang === 'fr' ? 'L\'attente est TOTALEMENT GRATUITE.' : currentLang === 'en' ? 'Waiting is TOTALLY FREE.' : 'L\'attesa è TOTALMENTE GRATUITA.'}</strong></p>
+            <p style="margin-bottom:12px;">${currentLang === 'fr' ? 'Randria suit votre vol en temps réel. Si votre avion a du retard, il vous attendra <strong>sans aucun frais supplémentaire</strong>, quelle que soit l\'heure d\'arrivée.' : currentLang === 'en' ? 'Randria tracks your flight in real time. If your plane is delayed, he will wait for you <strong>without any additional cost</strong>, regardless of the arrival time.' : 'Randria segue il tuo volo in tempo reale. Se il tuo aereo è in ritardo, ti aspetterà <strong>senza alcun costo aggiuntivo</strong>, indipendentemente dall\'ora di arrivo.'}</p>
             <div style="background:#fff9e6; padding:14px; border-radius:12px; margin-bottom:12px;">
-                <p><i class="fas fa-check" style="color:#27ae60;"></i> <strong>Suivi de vol en direct</strong></p>
-                <p><i class="fas fa-check" style="color:#27ae60;"></i> <strong>Aucun supplément</strong> pour le retard</p>
-                <p><i class="fas fa-check" style="color:#27ae60;"></i> <strong>Panneau à votre nom</strong> quoi qu'il arrive</p>
+                <p><i class="fas fa-check" style="color:#27ae60;"></i> <strong>${currentLang === 'fr' ? 'Suivi de vol en direct' : currentLang === 'en' ? 'Live flight tracking' : 'Monitoraggio volo in diretta'}</strong></p>
+                <p><i class="fas fa-check" style="color:#27ae60;"></i> <strong>${currentLang === 'fr' ? 'Aucun supplément' : currentLang === 'en' ? 'No extra charge' : 'Nessun supplemento'}</strong> ${currentLang === 'fr' ? 'pour le retard' : currentLang === 'en' ? 'for the delay' : 'per il ritardo'}</p>
+                <p><i class="fas fa-check" style="color:#27ae60;"></i> <strong>${currentLang === 'fr' ? 'Panneau à votre nom' : currentLang === 'en' ? 'Name sign for you' : 'Cartello con il tuo nome'}</strong> ${currentLang === 'fr' ? 'quoi qu\'il arrive' : currentLang === 'en' ? 'no matter what' : 'qualunque cosa accada'}</p>
             </div>
-            <button class="btn-full" style="background:#ddd;" onclick="closeModal('retardModal')">Fermer</button>
+            <button class="btn-full" style="background:#ddd;" onclick="closeModal('retardModal')">${currentLang === 'fr' ? 'Fermer' : currentLang === 'en' ? 'Close' : 'Chiudi'}</button>
         `;
         openModal('retardModal');
     }
@@ -1324,23 +1425,24 @@
     function showFormuleDetail(formula) {
         const f = formulesDetailData[formula];
         if (!f) return;
+        const t = (obj) => typeof obj === 'object' ? (obj[currentLang] || obj.fr) : obj;
         document.getElementById('formuleDetailContent').innerHTML = `
             <div style="text-align:center; margin-bottom:16px;">
-                <img src="${f.image}" style="width:100%; height:180px; object-fit:cover; border-radius:16px; margin-bottom:12px;" alt="${f.titre}">
-                <h3>${f.titre}</h3>
-                <p style="color:var(--primary-dark); font-weight:600;">${f.slogan}</p>
+                <img src="${f.image}" style="width:100%; height:auto; object-fit:contain; border-radius:16px; margin-bottom:12px; cursor:zoom-in;" onclick="openLightbox('${f.image}')" alt="${t(f.titre)}">
+                <h3>${t(f.titre)}</h3>
+                <p style="color:var(--primary-dark); font-weight:600;">${t(f.slogan)}</p>
             </div>
-            <p style="font-size:0.9rem; margin-bottom:16px;">${f.description}</p>
+            <p style="font-size:0.9rem; margin-bottom:16px;">${t(f.description)}</p>
             ${f.details.map(d => `
                 <div style="display:flex; justify-content:space-between; padding:12px; background:#f9fdf9; border-radius:12px; margin-bottom:8px;">
-                    <div><strong>${d.label}</strong><br><small style="color:var(--text-soft);">${d.desc}</small></div>
+                    <div><strong>${t(d.label)}</strong><br><small style="color:var(--text-soft);">${t(d.desc)}</small></div>
                     <div style="font-weight:700; color:var(--primary-dark);">${d.valeur}</div>
                 </div>
             `).join('')}
             <div style="text-align:center; margin-top:16px; padding:12px; background:var(--green); color:white; border-radius:16px; font-weight:700;">
-                Total estimé : ${f.total}
+                ${currentLang === 'fr' ? 'Total estimé' : currentLang === 'en' ? 'Estimated total' : 'Totale stimato'} : ${f.total}
             </div>
-            <button class="btn-full" style="background:#ddd; margin-top:8px;" onclick="closeModal('formuleDetailModal')">Fermer</button>
+            <button class="btn-full" style="background:#ddd; margin-top:8px;" onclick="closeModal('formuleDetailModal')">${currentLang === 'fr' ? 'Fermer' : currentLang === 'en' ? 'Close' : 'Chiudi'}</button>
         `;
         openModal('formuleDetailModal');
     }
@@ -1348,80 +1450,50 @@
     function showSortieDetail(cityKey) {
         const s = sortiesDetailData[cityKey];
         if (!s) return;
-        let html = `<div style="text-align:center; margin-bottom:16px;"><h3>${s.title}</h3><p style="color:var(--text-soft);">${s.desc}</p></div>`;
+        const t = (obj) => typeof obj === 'object' ? (obj[currentLang] || obj.fr) : obj;
+        let html = `<div style="text-align:center; margin-bottom:16px;"><h3>${t(s.title)}</h3><p style="color:var(--text-soft);">${t(s.desc)}</p></div>`;
         s.lieux.forEach(l => {
             html += `<div class="sortie-lieu-card">
-                        <span class="lieu-type">${l.type}</span>
+                        <span class="lieu-type">${t(l.type)}</span>
                         <h5>${l.nom}</h5>
-                        <p>${l.desc}</p>
+                        <p>${t(l.desc)}</p>
                         <div class="lieu-horaire"><i class="far fa-clock"></i> ${l.horaires}</div>
-                        <div class="lieu-prix">💰 ${l.prix || "Prix sur place"}</div>
-                        <div class="lieu-conseil"><i class="fas fa-lightbulb"></i> 💡 ${l.conseil || "Demandez conseil à Randria !"}</div>
+                        <div class="lieu-prix">💰 ${l.prix}</div>
+                        <div class="lieu-conseil"><i class="fas fa-lightbulb"></i> 💡 ${t(l.conseil)}</div>
                     </div>`;
         });
-        html += `<button class="btn-full" style="background:#ddd; margin-top:8px;" onclick="closeModal('sortieDetailModal')">Fermer</button>`;
+        html += `<button class="btn-full" style="background:#ddd; margin-top:8px;" onclick="closeModal('sortieDetailModal')">${currentLang === 'fr' ? 'Fermer' : currentLang === 'en' ? 'Close' : 'Chiudi'}</button>`;
         document.getElementById('sortieDetailContent').innerHTML = html;
         openModal('sortieDetailModal');
     }
 
-    // Fonction pour afficher le profil utilisateur
     function showUserProfile() {
         if (!isLoggedIn) {
-            showToast("Veuillez vous connecter d'abord");
+            showToast(currentLang === 'fr' ? "Veuillez vous connecter d'abord" : currentLang === 'en' ? "Please log in first" : "Per favore accedi prima");
             openModal('loginModal');
             return;
         }
-        
         const profileContent = document.getElementById('profileContent');
         const days = userDays || 7;
-        const cityName = destinationsData.find(d => d.key === userCity)?.name || userCity || "Non définie";
-        const originName = {
-            france: "France", europe: "Europe", afrique: "Afrique", autre: "Autre"
-        }[userOrigin] || "Non définie";
-        const formulaName = {
-            confort: "Confort", premium: "Premium", luxe: "Luxe"
-        }[userFormula] || "Non définie";
-        
-        // Calculer le budget estimé pour afficher
+        const cityName = destinationsData.find(d => d.key === userCity)?.name || userCity || "N/A";
+        const originNames = { france: { fr: "France", en: "France", it: "Francia" }, europe: { fr: "Europe", en: "Europe", it: "Europa" }, afrique: { fr: "Afrique", en: "Africa", it: "Africa" }, autre: { fr: "Autre", en: "Other", it: "Altro" } };
+        const originName = userOrigin ? (originNames[userOrigin]?.[currentLang] || userOrigin) : "N/A";
+        const formulaNames = { confort: { fr: "Confort", en: "Comfort", it: "Confort" }, premium: { fr: "Premium", en: "Premium", it: "Premium" }, luxe: { fr: "Luxe", en: "Luxury", it: "Lusso" } };
+        const formulaName = userFormula ? (formulaNames[userFormula]?.[currentLang] || userFormula) : "N/A";
         const budget = calculateBudget(days, userFormula || "confort", userCity || "tana");
-        
+
         profileContent.innerHTML = `
-            <div class="profile-detail-item">
-                <span class="profile-detail-label"><i class="fas fa-user"></i> Nom :</span>
-                <span class="profile-detail-value">${userName}</span>
-            </div>
-            <div class="profile-detail-item">
-                <span class="profile-detail-label"><i class="fas fa-envelope"></i> Email :</span>
-                <span class="profile-detail-value">${userEmail || "Non renseigné"}</span>
-            </div>
-            <div class="profile-detail-item">
-                <span class="profile-detail-label"><i class="fas fa-globe"></i> Provenance :</span>
-                <span class="profile-detail-value">${originName}</span>
-            </div>
-            <div class="profile-detail-item">
-                <span class="profile-detail-label"><i class="fas fa-map-marker-alt"></i> Destination :</span>
-                <span class="profile-detail-value">${cityName}</span>
-            </div>
-            <div class="profile-detail-item">
-                <span class="profile-detail-label"><i class="fas fa-star"></i> Formule :</span>
-                <span class="profile-detail-value">${formulaName}</span>
-            </div>
-            <div class="profile-detail-item">
-                <span class="profile-detail-label"><i class="fas fa-calendar"></i> Durée :</span>
-                <span class="profile-detail-value">${days} jours</span>
-            </div>
-            <div class="profile-detail-item">
-                <span class="profile-detail-label"><i class="fas fa-tag"></i> Réduction :</span>
-                <span class="profile-detail-value" style="color:#27ae60;">5% sur votre voyage</span>
-            </div>
-            <div class="profile-detail-item">
-                <span class="profile-detail-label"><i class="fas fa-coins"></i> Budget estimé :</span>
-                <span class="profile-detail-value">${Math.round(budget.total)}€</span>
-            </div>
+            <div class="profile-detail-item"><span class="profile-detail-label"><i class="fas fa-user"></i> ${currentLang === 'fr' ? 'Nom' : currentLang === 'en' ? 'Name' : 'Nome'} :</span><span class="profile-detail-value">${userName}</span></div>
+            <div class="profile-detail-item"><span class="profile-detail-label"><i class="fas fa-envelope"></i> Email :</span><span class="profile-detail-value">${userEmail || "N/A"}</span></div>
+            <div class="profile-detail-item"><span class="profile-detail-label"><i class="fas fa-globe"></i> ${currentLang === 'fr' ? 'Provenance' : currentLang === 'en' ? 'Origin' : 'Provenienza'} :</span><span class="profile-detail-value">${originName}</span></div>
+            <div class="profile-detail-item"><span class="profile-detail-label"><i class="fas fa-map-marker-alt"></i> ${currentLang === 'fr' ? 'Destination' : currentLang === 'en' ? 'Destination' : 'Destinazione'} :</span><span class="profile-detail-value">${cityName}</span></div>
+            <div class="profile-detail-item"><span class="profile-detail-label"><i class="fas fa-star"></i> ${currentLang === 'fr' ? 'Formule' : currentLang === 'en' ? 'Formula' : 'Formula'} :</span><span class="profile-detail-value">${formulaName}</span></div>
+            <div class="profile-detail-item"><span class="profile-detail-label"><i class="fas fa-calendar"></i> ${currentLang === 'fr' ? 'Durée' : currentLang === 'en' ? 'Duration' : 'Durata'} :</span><span class="profile-detail-value">${days} ${currentLang === 'fr' ? 'jours' : currentLang === 'en' ? 'days' : 'giorni'}</span></div>
+            <div class="profile-detail-item"><span class="profile-detail-label"><i class="fas fa-tag"></i> ${currentLang === 'fr' ? 'Réduction' : currentLang === 'en' ? 'Discount' : 'Sconto'} :</span><span class="profile-detail-value" style="color:#27ae60;">5%</span></div>
+            <div class="profile-detail-item"><span class="profile-detail-label"><i class="fas fa-coins"></i> ${currentLang === 'fr' ? 'Budget estimé' : currentLang === 'en' ? 'Estimated budget' : 'Budget stimato'} :</span><span class="profile-detail-value">${Math.round(budget.total)}€</span></div>
             <hr style="margin: 12px 0;">
             <p style="font-size:0.8rem; color:var(--text-soft); text-align:center;">
-                <i class="fas fa-shield-alt"></i> Votre espace personnel HOLDEST<br>
-                Connectez-vous pour gérer vos réservations et suivre vos voyages.
+                <i class="fas fa-shield-alt"></i> ${currentLang === 'fr' ? 'Votre espace personnel HOLDEST' : currentLang === 'en' ? 'Your personal HOLDEST space' : 'Il tuo spazio personale HOLDEST'}
             </p>
         `;
         openModal('profileModal');
@@ -1432,17 +1504,15 @@
         userOrigin = document.getElementById('regOrigin').value;
         userFormula = document.getElementById('registerFormula').value;
         userDays = parseInt(document.getElementById('registerDays').value);
-        userName = document.getElementById('regName').value || "Voyageur";
+        userName = document.getElementById('regName').value || (currentLang === 'fr' ? 'Voyageur' : currentLang === 'en' ? 'Traveler' : 'Viaggiatore');
         userEmail = document.getElementById('regEmail').value || "";
-        
-        if (!userCity || !userOrigin || !userFormula || !userDays) { 
-            alert("Complétez tous les champs"); 
-            return; 
+
+        if (!userCity || !userOrigin || !userFormula || !userDays) {
+            alert(currentLang === 'fr' ? 'Complétez tous les champs' : currentLang === 'en' ? 'Fill in all fields' : 'Completa tutti i campi');
+            return;
         }
-        
+
         isLoggedIn = true;
-        
-        // Admin détection (email spécifique pour voir l'espace manager)
         if (userEmail === "admin@holdest.com" || userEmail === "manager@holdest.com") {
             isAdmin = true;
             document.getElementById('managerSection').classList.add('visible');
@@ -1451,7 +1521,7 @@
             isAdmin = false;
             document.getElementById('managerSection').classList.remove('visible');
         }
-        
+
         document.querySelectorAll('#locationSelector button').forEach(b => b.classList.remove('active'));
         const tb = document.querySelector(`#locationSelector button[data-loc="${userCity}"]`);
         if (tb) tb.classList.add('active');
@@ -1464,8 +1534,8 @@
         document.querySelectorAll('#durationSelector button').forEach(b => b.classList.remove('active'));
         const dt = document.querySelector(`#durationSelector button[data-days="${userDays}"]`);
         if (dt) dt.classList.add('active');
-        
-        showToast("✅ Compte créé ! -5% activé.");
+
+        showToast(currentLang === 'fr' ? "✅ Compte créé ! -5% activé." : currentLang === 'en' ? "✅ Account created! -5% activated." : "✅ Account creato! -5% attivato.");
         closeModal('registerModal');
         updateHeader();
         updateOriginInfo();
@@ -1478,19 +1548,16 @@
     }
 
     function getCityName(key) {
-        const names = { tana:"Antananarivo", majunga:"Majunga", nosybe:"Nosy Be", diego:"Diego Suarez", tamatave:"Tamatave" };
+        const names = { tana: "Antananarivo", majunga: "Majunga", nosybe: "Nosy Be", diego: "Diego Suarez", tamatave: "Tamatave" };
         return names[key] || key;
     }
 
     function login() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        
         isLoggedIn = true;
-        userName = "Voyageur HOLDEST";
+        userName = currentLang === 'fr' ? "Voyageur HOLDEST" : currentLang === 'en' ? "HOLDEST Traveler" : "Viaggiatore HOLDEST";
         userEmail = email;
-        
-        // Admin détection
         if (email === "admin@holdest.com" || email === "manager@holdest.com") {
             isAdmin = true;
             document.getElementById('managerSection').classList.add('visible');
@@ -1499,7 +1566,6 @@
             isAdmin = false;
             document.getElementById('managerSection').classList.remove('visible');
         }
-        
         closeModal('loginModal');
         updateHeader();
         updateOriginInfo();
@@ -1507,7 +1573,7 @@
         updateMonVoyageDisplay();
         if (userCity) updateExtrasDisplay(userCity);
         updateManagerCommission();
-        showToast("✅ Connecté à HOLDEST !");
+        showToast(currentLang === 'fr' ? "✅ Connecté à HOLDEST !" : currentLang === 'en' ? "✅ Connected to HOLDEST!" : "✅ Connesso a HOLDEST!");
     }
 
     function logout() {
@@ -1526,26 +1592,41 @@
         updateBudgetDisplay();
         updateManagerCommission();
         document.getElementById('monVoyageSection').style.display = 'none';
-        document.getElementById('extrasGrid').innerHTML = '<p style="text-align:center;color:var(--text-soft);">Connectez-vous pour ajouter des extras.</p>';
-        showToast("👋 Déconnecté");
+        document.getElementById('extrasGrid').innerHTML = `<p style="text-align:center;color:var(--text-soft);">${currentLang === 'fr' ? 'Connectez-vous pour ajouter des extras.' : currentLang === 'en' ? 'Log in to add extras.' : 'Accedi per aggiungere extra.'}</p>`;
+        showToast(currentLang === 'fr' ? "👋 Déconnecté" : currentLang === 'en' ? "👋 Logged out" : "👋 Disconnesso");
     }
 
     function updateHeader() {
         const hb = document.getElementById('headerButtons');
+        const btnLoginText = currentLang === 'fr' ? 'Se connecter' : currentLang === 'en' ? 'Log in' : 'Accedi';
+        const btnRegisterText = currentLang === 'fr' ? "S'inscrire" : currentLang === 'en' ? 'Sign up' : 'Registrati';
+        const btnLogoutText = currentLang === 'fr' ? 'Déconnexion' : currentLang === 'en' ? 'Logout' : 'Logout';
+        const budgetSerréText = currentLang === 'fr' ? 'Budget Serré' : currentLang === 'en' ? 'Low Budget' : 'Budget Serré';
+
         if (isLoggedIn) {
             hb.innerHTML = `
+                <div class="lang-selector">
+                    <button class="lang-btn ${currentLang === 'fr' ? 'active' : ''}" data-lang="fr" onclick="changeLanguage('fr')">🇫🇷</button>
+                    <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en" onclick="changeLanguage('en')">🇬🇧</button>
+                    <button class="lang-btn ${currentLang === 'it' ? 'active' : ''}" data-lang="it" onclick="changeLanguage('it')">🇮🇹</button>
+                </div>
                 <div class="user-profile-btn" onclick="showUserProfile()">
                     <i class="fas fa-user-circle"></i>
                     <span>${userName} <span class="reduction-badge">-5%</span></span>
                 </div>
-                <button class="btn-sm btn-outline" onclick="logout()">Déconnexion</button>
-                <button class="btn-sm btn-dark" onclick="openRootsInterface()"><i class="fas fa-fire"></i> Budget Serré</button>
+                <button class="btn-sm btn-outline" onclick="logout()">${btnLogoutText}</button>
+                <button class="btn-sm btn-dark" onclick="openRootsInterface()"><i class="fas fa-fire"></i> ${budgetSerréText}</button>
             `;
         } else {
             hb.innerHTML = `
-                <button class="btn-sm btn-outline" onclick="openModal('loginModal')">Se connecter</button>
-                <button class="btn-sm btn-filled" onclick="openModal('registerModal')">S'inscrire</button>
-                <button class="btn-sm btn-dark" onclick="openRootsInterface()"><i class="fas fa-fire"></i> Budget Serré</button>
+                <div class="lang-selector">
+                    <button class="lang-btn ${currentLang === 'fr' ? 'active' : ''}" data-lang="fr" onclick="changeLanguage('fr')">🇫🇷</button>
+                    <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en" onclick="changeLanguage('en')">🇬🇧</button>
+                    <button class="lang-btn ${currentLang === 'it' ? 'active' : ''}" data-lang="it" onclick="changeLanguage('it')">🇮🇹</button>
+                </div>
+                <button class="btn-sm btn-outline" onclick="openModal('loginModal')">🔐 ${btnLoginText}</button>
+                <button class="btn-sm btn-filled" onclick="openModal('registerModal')">📝 ${btnRegisterText}</button>
+                <button class="btn-sm btn-dark" onclick="openRootsInterface()"><i class="fas fa-fire"></i> ${budgetSerréText}</button>
             `;
         }
     }
@@ -1555,16 +1636,32 @@
         if (isLoggedIn && userOrigin) {
             box.style.display = 'block';
             const texts = {
-                france: { title:"Depuis la France 🇫🇷", detail:"Vol direct Paris-Ivato : 10-11h. Visa 35€. 1€ ≈ " + currentExchangeRate + " Ar." },
-                europe: { title:"Depuis l'Europe 🇪🇺", detail:"Vols avec escale. Prévoyez 14-20h." },
-                afrique: { title:"Depuis l'Afrique 🌍", detail:"Vols directs depuis Nairobi, Addis-Abeba." },
-                autre: { title:"Depuis l'étranger ✈️", detail:"Randria s'adapte à votre itinéraire." }
+                france: {
+                    fr: { title: "Depuis la France 🇫🇷", detail: "Vol direct Paris-Ivato : 10-11h. Visa 35€. 1€ ≈ " + currentExchangeRate + " Ar." },
+                    en: { title: "From France 🇫🇷", detail: "Direct flight Paris-Ivato: 10-11h. Visa 35€. 1€ ≈ " + currentExchangeRate + " Ar." },
+                    it: { title: "Dalla Francia 🇫🇷", detail: "Volo diretto Parigi-Ivato: 10-11h. Visto 35€. 1€ ≈ " + currentExchangeRate + " Ar." }
+                },
+                europe: {
+                    fr: { title: "Depuis l'Europe 🇪🇺", detail: "Vols avec escale. Prévoyez 14-20h." },
+                    en: { title: "From Europe 🇪🇺", detail: "Flights with stopover. Allow 14-20h." },
+                    it: { title: "Dall'Europa 🇪🇺", detail: "Voli con scalo. Prevedere 14-20h." }
+                },
+                afrique: {
+                    fr: { title: "Depuis l'Afrique 🌍", detail: "Vols directs depuis Nairobi, Addis-Abeba." },
+                    en: { title: "From Africa 🌍", detail: "Direct flights from Nairobi, Addis Ababa." },
+                    it: { title: "Dall'Africa 🌍", detail: "Voli diretti da Nairobi, Addis Abeba." }
+                },
+                autre: {
+                    fr: { title: "Depuis l'étranger ✈️", detail: "Randria s'adapte à votre itinéraire." },
+                    en: { title: "From abroad ✈️", detail: "Randria adapts to your itinerary." },
+                    it: { title: "Dall'estero ✈️", detail: "Randria si adatta al tuo itinerario." }
+                }
             };
             const info = texts[userOrigin] || texts.autre;
-            document.getElementById('originTitle').innerText = info.title;
-            document.getElementById('originDetails').innerText = info.detail;
-        } else { 
-            box.style.display = 'none'; 
+            document.getElementById('originTitle').innerText = info[currentLang]?.title || info.fr.title;
+            document.getElementById('originDetails').innerText = info[currentLang]?.detail || info.fr.detail;
+        } else {
+            box.style.display = 'none';
         }
     }
 
@@ -1573,19 +1670,19 @@
         document.getElementById('monVoyageSection').style.display = 'block';
         const cityName = destinationsData.find(d => d.key === userCity)?.name || getCityName(userCity);
         const programme = programmesData[userCity] || programmesData.tana;
-        let progHtml = '<div class="programme-detail"><h4><i class="fas fa-calendar-week"></i> Programme jour par jour</h4>';
+        let progHtml = '<div class="programme-detail"><h4><i class="fas fa-calendar-week"></i> ' + (currentLang === 'fr' ? 'Programme jour par jour' : currentLang === 'en' ? 'Day by day program' : 'Programma giorno per giorno') + '</h4>';
         const maxJ = Math.min(userDays, programme.length);
         for (let i = 0; i < maxJ; i++) {
-            progHtml += `<div class="jour-item"><div class="jour-num">Jour ${programme[i].jour}</div><div class="jour-desc">${programme[i].desc}</div></div>`;
+            progHtml += `<div class="jour-item"><div class="jour-num">${currentLang === 'fr' ? 'Jour' : currentLang === 'en' ? 'Day' : 'Giorno'} ${programme[i].jour}</div><div class="jour-desc">${programme[i][currentLang] || programme[i].fr}</div></div>`;
         }
-        if (userDays > programme.length) progHtml += `<p style="margin-top:12px;"><em>+ jours supplémentaires personnalisables</em></p>`;
+        if (userDays > programme.length) progHtml += `<p style="margin-top:12px;"><em>${currentLang === 'fr' ? '+ jours supplémentaires personnalisables' : currentLang === 'en' ? '+ additional customizable days' : '+ giorni extra personalizzabili'}</em></p>`;
         progHtml += '</div>';
         document.getElementById('monVoyageCard').innerHTML = `
-            <h3><i class="fas fa-suitcase"></i> Mon voyage HOLDEST × Junga Tour</h3>
-            <p><strong>📍 ${cityName}</strong> | 📅 ${userDays}j | ⭐ ${userFormula}</p>
+            <h3><i class="fas fa-suitcase"></i> ${currentLang === 'fr' ? 'Mon voyage HOLDEST × Junga Tour' : currentLang === 'en' ? 'My trip HOLDEST × Junga Tour' : 'Il mio viaggio HOLDEST × Junga Tour'}</h3>
+            <p><strong>📍 ${cityName}</strong> | 📅 ${userDays}${currentLang === 'fr' ? 'j' : currentLang === 'en' ? 'd' : 'g'} | ⭐ ${userFormula}</p>
             <p><strong>🌍</strong> ${userOrigin === 'france' ? 'France' : userOrigin === 'europe' ? 'Europe' : userOrigin === 'afrique' ? 'Afrique' : 'Autre'}</p>
             ${progHtml}
-            <button class="btn-sm btn-filled" onclick="activateScreen('budget')" style="width:100%;">💰 Voir budget</button>
+            <button class="btn-sm btn-filled" onclick="activateScreen('budget')" style="width:100%;">💰 ${currentLang === 'fr' ? 'Voir budget' : currentLang === 'en' ? 'See budget' : 'Vedi budget'}</button>
         `;
     }
 
@@ -1596,7 +1693,7 @@
                 <i class="fas fa-glass-cheers"></i>
                 <div><strong>${e.name}</strong></div>
                 <div class="extra-price">${e.price}€</div>
-                <small>${e.desc}</small>
+                <small>${e.desc[currentLang] || e.desc.fr}</small>
             </div>
         `).join('');
         document.querySelectorAll('.extra-card').forEach(card => {
@@ -1618,12 +1715,12 @@
     function updateTransportDisplay(loc) {
         const data = transportDetailsData[loc] || transportDetailsData.tana;
         document.getElementById('transportDetailsGrid').innerHTML = data.map(t => `
-            <div class="card"><div class="card-content"><h3>${t.title}</h3><p>${t.desc}</p><p><strong>🌟</strong> ${t.prix}</p><p style="color:var(--primary);"><strong>🌿 Roots :</strong> ${t.roots}</p><button class="reserve-btn">Réserver</button></div></div>
+            <div class="card"><div class="card-content"><h3>${t.title[currentLang] || t.title.fr}</h3><p>${t.desc[currentLang] || t.desc.fr}</p><p><strong>🌟</strong> ${t.prix}</p><p style="color:var(--primary);"><strong>🌿 Roots :</strong> ${t.roots}</p><button class="reserve-btn">${currentLang === 'fr' ? 'Réserver' : currentLang === 'en' ? 'Book' : 'Prenota'}</button></div></div>
         `).join('');
     }
 
     function updateManagerCommission() {
-        if (!isAdmin) return; // Seulement pour l'admin
+        if (!isAdmin) return;
         const days = parseInt(document.querySelector('#durationSelector button.active')?.dataset.days || 7);
         const formula = document.querySelector('#formulaSelector button.active')?.dataset.formula || 'confort';
         const location = document.querySelector('#locationSelector button.active')?.dataset.loc || 'tana';
@@ -1642,13 +1739,13 @@
     document.getElementById('acompteOptions').addEventListener('click', e => {
         const opt = e.target.closest('.acompte-option');
         if (!opt) return;
-        document.querySelectorAll('.acompte-option').forEach(o => { o.classList.remove('selected'); o.style.background='white'; o.style.borderColor='#ddd'; o.style.color='#1a2b22'; });
+        document.querySelectorAll('.acompte-option').forEach(o => { o.classList.remove('selected'); o.style.background = 'white'; o.style.borderColor = '#ddd'; o.style.color = '#1a2b22'; });
         opt.classList.add('selected');
-        opt.style.background='#f0f7f2'; opt.style.borderColor='var(--green)'; opt.style.color='#1a2b22';
+        opt.style.background = '#f0f7f2'; opt.style.borderColor = 'var(--green)'; opt.style.color = '#1a2b22';
         selectedAcompte = opt.dataset.acompte;
         document.getElementById('acompteDescription').innerHTML = selectedAcompte === 'aeroport'
-            ? "<strong>Aéroport :</strong> Randria vous accueille avec un panneau. Frais dossier 30€ + 30% du solde. <span style='color:#27ae60;'>🕒 Retard vol = attente GRATUITE.</span>"
-            : "<strong>Sur place :</strong> Rendez-vous convenu. Frais dossier 30€ + 30% du solde.";
+            ? `<strong>${currentLang === 'fr' ? 'Aéroport : Randria vous accueille avec un panneau. Frais dossier 30€ + 30% du solde.' : currentLang === 'en' ? 'Airport: Randria welcomes you with a name sign. Dossier fee 30€ + 30% of balance.' : 'Aeroporto: Randria ti accoglie con un cartello. Tassa pratica 30€ + 30% del saldo.'}</strong> <span style="color:#27ae60;">🕒 ${currentLang === 'fr' ? 'Retard vol = attente GRATUITE.' : currentLang === 'en' ? 'Flight delay = FREE waiting.' : 'Ritardo volo = attesa GRATUITA.'}</span>`
+            : `<strong>${currentLang === 'fr' ? 'Sur place : Rendez-vous convenu. Frais dossier 30€ + 30% du solde.' : currentLang === 'en' ? 'On site: Agreed meeting. Dossier fee 30€ + 30% of balance.' : 'Sul posto: Appuntamento concordato. Tassa pratica 30€ + 30% del saldo.'}</strong>`;
         updateBudgetDisplay();
         updateManagerCommission();
     });
@@ -1660,70 +1757,48 @@
             luxe: { guide: 55, transport: 55, hebergement: 65, repas: 30, activites: 28 }
         };
         let p = { ...basePrices[formula] };
-        
         if (location === 'nosybe' || location === 'diego') {
             p = { ...p, transport: Math.round(p.transport * 1.15), hebergement: Math.round(p.hebergement * 1.1) };
         }
-        
         let aeroportFee = 0;
         if (selectedAcompte === 'aeroport') {
             const fees = { tana: 15, majunga: 10, nosybe: 25, diego: 30, tamatave: 20 };
             aeroportFee = fees[location] || 15;
         }
-        
         let guideCostPerDay = p.guide;
         let transportCostPerDay = p.transport;
         let hebergementCostPerDay = p.hebergement;
         let repasCostPerDay = p.repas;
         let activitesCostPerDay = p.activites;
-        
         let peopleFactor = 1;
         let hebergementFactor = 1;
-        
-        if (currentPeopleCount === 2) {
-            hebergementFactor = 0.5;
-            peopleFactor = 2;
-        } else if (currentPeopleCount >= 4) {
-            hebergementFactor = 0.5;
-            peopleFactor = currentPeopleCount;
-            if (currentPeopleCount >= 6) {
-                guideCostPerDay = p.guide * 0.7;
-                transportCostPerDay = p.transport * 0.6;
-            } else {
-                guideCostPerDay = p.guide * 0.8;
-                transportCostPerDay = p.transport * 0.7;
-            }
-        } else {
-            peopleFactor = 1;
-            hebergementFactor = 1;
+        if (currentPeopleCount === 2) { hebergementFactor = 0.5; peopleFactor = 2; }
+        else if (currentPeopleCount >= 4) {
+            hebergementFactor = 0.5; peopleFactor = currentPeopleCount;
+            if (currentPeopleCount >= 6) { guideCostPerDay = p.guide * 0.7; transportCostPerDay = p.transport * 0.6; }
+            else { guideCostPerDay = p.guide * 0.8; transportCostPerDay = p.transport * 0.7; }
         }
-        
         const guideTotal = guideCostPerDay * days;
         const transportTotal = (transportCostPerDay * days) + (aeroportFee / peopleFactor);
         const hebergementTotal = (hebergementCostPerDay * days) * hebergementFactor;
         const repasTotal = repasCostPerDay * days;
         const activitesTotal = activitesCostPerDay * days;
-        
         let items = [
-            { label: "Guide Randria", eur: guideTotal },
-            { label: "Transport", eur: transportTotal },
-            { label: "Hébergement", eur: hebergementTotal },
-            { label: "Repas", eur: repasTotal },
-            { label: "Activités", eur: activitesTotal }
+            { label: { fr: "Guide Randria", en: "Guide Randria", it: "Guida Randria" }, eur: guideTotal },
+            { label: { fr: "Transport", en: "Transport", it: "Trasporto" }, eur: transportTotal },
+            { label: { fr: "Hébergement", en: "Accommodation", it: "Alloggio" }, eur: hebergementTotal },
+            { label: { fr: "Repas", en: "Meals", it: "Pasti" }, eur: repasTotal },
+            { label: { fr: "Activités", en: "Activities", it: "Attività" }, eur: activitesTotal }
         ];
-        
         let extrasTotal = selectedExtras.reduce((s, e) => s + e.price, 0);
-        if (extrasTotal > 0) items.push({ label: "🎉 Extras", eur: extrasTotal });
-        
+        if (extrasTotal > 0) items.push({ label: { fr: "🎉 Extras", en: "🎉 Extras", it: "🎉 Extra" }, eur: extrasTotal });
         let total = items.reduce((s, i) => s + i.eur, 0);
         let reduction = isLoggedIn ? Math.round(total * 0.05) : 0;
         total -= reduction;
-        
         const fraisDossier = 30;
         const acompteReservation = Math.round((total - fraisDossier) * 0.3);
         const acompteTotal = fraisDossier + acompteReservation;
         const solde = total - acompteTotal;
-        
         return { items, total, reduction, fraisDossier, acompteReservation, acompteTotal, solde };
     }
 
@@ -1736,18 +1811,27 @@
         const formula = fb.dataset.formula;
         const location = lb.dataset.loc;
         const { items, total, reduction, fraisDossier, acompteReservation, acompteTotal, solde } = calculateBudget(days, formula, location);
-        
-        let html = `<div class="row header-row"><span>Poste (par voyageur)</span><span>€</span><span>Ariary</span></div>`;
-        items.forEach(i => html += `<div class="row"><span>${i.label}</span><span class="price-eur">${Math.round(i.eur)}€</span><span class="price-ar">${Math.round(i.eur * currentExchangeRate).toLocaleString()} Ar</span></div>`);
-        if (reduction > 0) html += `<div class="row" style="color:#27ae60;"><span>✅ Réduction 5%</span><span>-${reduction}€</span><span>-${Math.round(reduction * currentExchangeRate).toLocaleString()} Ar</span></div>`;
-        html += `<div class="row total"><span>💰 TOTAL (${currentPeopleCount} personne${currentPeopleCount > 1 ? 's' : ''})</span><span>${Math.round(total)}€</span><span>${Math.round(total * currentExchangeRate).toLocaleString()} Ar</span></div>`;
-        html += `<div class="row dossier"><span>📋 Frais dossier</span><span>${fraisDossier}€</span><span>${Math.round(fraisDossier * currentExchangeRate).toLocaleString()} Ar</span></div>`;
-        html += `<div class="row acompte"><span>🔒 Acompte 30%</span><span>${acompteReservation}€</span><span>${Math.round(acompteReservation * currentExchangeRate).toLocaleString()} Ar</span></div>`;
-        html += `<div class="row" style="background:#fff3e0; font-weight:700;"><span>💳 À payer en ligne</span><span>${acompteTotal}€</span><span>${Math.round(acompteTotal * currentExchangeRate).toLocaleString()} Ar</span></div>`;
-        html += `<div class="row"><span>💵 Solde sur place</span><span>${Math.round(solde)}€</span><span>${Math.round(solde * currentExchangeRate).toLocaleString()} Ar</span></div>`;
-        
+
+        const headerLabels = {
+            fr: { poste: "Poste (par voyageur)", eur: "€", ar: "Ariary", total: "TOTAL", dossier: "Frais dossier", acompte: "Acompte 30%", enLigne: "À payer en ligne", solde: "Solde sur place", reduction: "Réduction 5%", personne: "personne", personnes: "personnes" },
+            en: { poste: "Item (per traveler)", eur: "€", ar: "Ariary", total: "TOTAL", dossier: "Dossier fee", acompte: "Deposit 30%", enLigne: "To pay online", solde: "Balance on site", reduction: "5% discount", personne: "person", personnes: "people" },
+            it: { poste: "Voce (per viaggiatore)", eur: "€", ar: "Ariary", total: "TOTALE", dossier: "Tassa pratica", acompte: "Acconto 30%", enLigne: "Da pagare online", solde: "Saldo sul posto", reduction: "Sconto 5%", personne: "persona", persone: "persone" }
+        };
+        const lab = headerLabels[currentLang] || headerLabels.fr;
+
+        let html = `<div class="row header-row"><span>${lab.poste}</span><span>${lab.eur}</span><span>${lab.ar}</span></div>`;
+        items.forEach(i => html += `<div class="row"><span>${i.label[currentLang] || i.label.fr}</span><span class="price-eur">${Math.round(i.eur)}€</span><span class="price-ar">${Math.round(i.eur * currentExchangeRate).toLocaleString()} Ar</span></div>`);
+        if (reduction > 0) html += `<div class="row" style="color:#27ae60;"><span>✅ ${lab.reduction}</span><span>-${reduction}€</span><span>-${Math.round(reduction * currentExchangeRate).toLocaleString()} Ar</span></div>`;
+        html += `<div class="row total"><span>💰 ${lab.total} (${currentPeopleCount} ${currentPeopleCount > 1 ? lab.personnes : lab.personne})</span><span>${Math.round(total)}€</span><span>${Math.round(total * currentExchangeRate).toLocaleString()} Ar</span></div>`;
+        html += `<div class="row dossier"><span>📋 ${lab.dossier}</span><span>${fraisDossier}€</span><span>${Math.round(fraisDossier * currentExchangeRate).toLocaleString()} Ar</span></div>`;
+        html += `<div class="row acompte"><span>🔒 ${lab.acompte}</span><span>${acompteReservation}€</span><span>${Math.round(acompteReservation * currentExchangeRate).toLocaleString()} Ar</span></div>`;
+        html += `<div class="row" style="background:#fff3e0; font-weight:700;"><span>💳 ${lab.enLigne}</span><span>${acompteTotal}€</span><span>${Math.round(acompteTotal * currentExchangeRate).toLocaleString()} Ar</span></div>`;
+        html += `<div class="row"><span>💵 ${lab.solde}</span><span>${Math.round(solde)}€</span><span>${Math.round(solde * currentExchangeRate).toLocaleString()} Ar</span></div>`;
+
         document.getElementById("budgetTable").innerHTML = html;
-        document.getElementById("reductionMsg").innerHTML = isLoggedIn ? `<span class="reduction-badge">-5%</span> Appliquée !` : `<a href="#" onclick="openModal('registerModal'); return false;">🔒 Compte HOLDEST = -5%</a>`;
+        document.getElementById("reductionMsg").innerHTML = isLoggedIn
+            ? `<span class="reduction-badge">-5%</span> ${currentLang === 'fr' ? 'Appliquée !' : currentLang === 'en' ? 'Applied!' : 'Applicato!'}`
+            : `<a href="#" onclick="openModal('registerModal'); return false;">🔒 ${currentLang === 'fr' ? 'Compte HOLDEST = -5%' : currentLang === 'en' ? 'HOLDEST Account = -5%' : 'Account HOLDEST = -5%'}</a>`;
         updateManagerCommission();
     }
 
@@ -1755,50 +1839,25 @@
         const peopleBtn = document.querySelector('#rootsPeopleSelector button.active');
         let rootsPeople = peopleBtn ? parseInt(peopleBtn.dataset.peopleRoots) : 1;
         if (isNaN(rootsPeople)) rootsPeople = 1;
-        
-        const guidePerDay = 28;
-        const transportPerDay = 10;
-        const hebergementPerNight = 15;
-        const repasPerDay = 8;
-        const activitesPerDay = 10;
-        const days = 7;
-        
-        let hebergementFactor = 1;
-        let transportFactor = 1;
-        let guideFactor = 1;
-        
-        if (rootsPeople === 2) {
-            hebergementFactor = 0.5;
-            guideFactor = 0.8;
-            transportFactor = 0.7;
-        } else if (rootsPeople >= 4) {
-            hebergementFactor = 0.4;
-            guideFactor = 0.6;
-            transportFactor = 0.5;
-            if (rootsPeople >= 6) {
-                guideFactor = 0.5;
-                transportFactor = 0.4;
-            }
-        }
-        
+        const guidePerDay = 28; const transportPerDay = 10; const hebergementPerNight = 15; const repasPerDay = 8; const activitesPerDay = 10; const days = 7;
+        let hebergementFactor = 1; let transportFactor = 1; let guideFactor = 1;
+        if (rootsPeople === 2) { hebergementFactor = 0.5; guideFactor = 0.8; transportFactor = 0.7; }
+        else if (rootsPeople >= 4) { hebergementFactor = 0.4; guideFactor = 0.6; transportFactor = 0.5; if (rootsPeople >= 6) { guideFactor = 0.5; transportFactor = 0.4; } }
         const guideTotal = guidePerDay * days * guideFactor;
         const transportTotal = transportPerDay * days * transportFactor;
         const hebergementTotal = (hebergementPerNight * days) * hebergementFactor;
         const repasTotal = repasPerDay * days;
         const activitesTotal = activitesPerDay * days;
         const total = guideTotal + transportTotal + hebergementTotal + repasTotal + activitesTotal;
-        
         document.getElementById('rootsGuidePrice').innerHTML = `${Math.round(guidePerDay * guideFactor)}€ x ${days}j = ${Math.round(guideTotal)}€`;
         document.getElementById('rootsTransportPrice').innerHTML = `${Math.round(transportPerDay * transportFactor)}€ x ${days}j = ${Math.round(transportTotal)}€`;
         document.getElementById('rootsHebergementPrice').innerHTML = `${Math.round(hebergementPerNight * hebergementFactor)}€ x ${days}j = ${Math.round(hebergementTotal)}€`;
         document.getElementById('rootsRepasPrice').innerHTML = `${Math.round(repasPerDay)}€ x ${days}j = ${Math.round(repasTotal)}€`;
         document.getElementById('rootsActivitesPrice').innerHTML = `${Math.round(activitesPerDay)}€ x ${days}j = ${Math.round(activitesTotal)}€`;
-        
         const totalRounded = Math.round(total);
         const acompteReservation = Math.round((totalRounded - 30) * 0.3);
         const acompteTotal = 30 + acompteReservation;
         const solde = totalRounded - acompteTotal;
-        
         document.getElementById('rootsTotalEuro').innerHTML = `${totalRounded}€ (${Math.round(totalRounded * currentExchangeRate).toLocaleString()} Ar)`;
         document.getElementById('rootsArTotal').innerHTML = Math.round(totalRounded * currentExchangeRate).toLocaleString();
         document.getElementById('rootsAcompteReservation').innerHTML = `${acompteReservation}€`;
@@ -1811,42 +1870,18 @@
         let people = parseInt(document.getElementById('rootsCustomPeople').value);
         let hebergementCost = parseFloat(document.getElementById('rootsCustomHebergement').value);
         let repasCost = parseFloat(document.getElementById('rootsCustomRepas').value);
-        
-        if (isNaN(days)) days = 7;
-        if (isNaN(people)) people = 1;
-        if (isNaN(hebergementCost)) hebergementCost = 15;
-        if (isNaN(repasCost)) repasCost = 8;
-        
-        let guideCost = 28;
-        let transportCost = 10;
-        let activitesCost = 10;
-        
-        let hebergementFactor = 1;
-        let guideFactor = 1;
-        let transportFactor = 1;
-        
-        if (people === 2) {
-            hebergementFactor = 0.5;
-            guideFactor = 0.8;
-            transportFactor = 0.7;
-        } else if (people >= 4) {
-            hebergementFactor = 0.4;
-            guideFactor = 0.6;
-            transportFactor = 0.5;
-            if (people >= 6) {
-                guideFactor = 0.5;
-                transportFactor = 0.4;
-            }
-        }
-        
+        if (isNaN(days)) days = 7; if (isNaN(people)) people = 1; if (isNaN(hebergementCost)) hebergementCost = 15; if (isNaN(repasCost)) repasCost = 8;
+        let guideCost = 28; let transportCost = 10; let activitesCost = 10;
+        let hebergementFactor = 1; let guideFactor = 1; let transportFactor = 1;
+        if (people === 2) { hebergementFactor = 0.5; guideFactor = 0.8; transportFactor = 0.7; }
+        else if (people >= 4) { hebergementFactor = 0.4; guideFactor = 0.6; transportFactor = 0.5; if (people >= 6) { guideFactor = 0.5; transportFactor = 0.4; } }
         const total = (guideCost * days * guideFactor) + (transportCost * days * transportFactor) + (hebergementCost * days * hebergementFactor) + (repasCost * days) + (activitesCost * days);
         const totalRounded = Math.round(total);
-        
         document.getElementById('rootsCustomResult').innerHTML = `
-            💰 Budget total estimé : <strong>${totalRounded}€</strong> (${Math.round(totalRounded * currentExchangeRate).toLocaleString()} Ar)<br>
-            📅 ${days} jour(s) - 👥 ${people} personne(s)<br>
-            💳 Acompte (30€ dossier + 30%) : ${Math.round(30 + (totalRounded - 30) * 0.3)}€<br>
-            💵 Solde sur place : ${Math.round(totalRounded - (30 + (totalRounded - 30) * 0.3))}€
+            💰 ${currentLang === 'fr' ? 'Budget total estimé' : currentLang === 'en' ? 'Total estimated budget' : 'Budget totale stimato'} : <strong>${totalRounded}€</strong> (${Math.round(totalRounded * currentExchangeRate).toLocaleString()} Ar)<br>
+            📅 ${days} ${currentLang === 'fr' ? 'jour(s)' : currentLang === 'en' ? 'day(s)' : 'giorno(i)'} - 👥 ${people} ${currentLang === 'fr' ? 'personne(s)' : currentLang === 'en' ? 'person(s)' : 'persona(e)'}<br>
+            💳 ${currentLang === 'fr' ? 'Acompte (30€ dossier + 30%)' : currentLang === 'en' ? 'Deposit (30€ fee + 30%)' : 'Acconto (30€ pratica + 30%)'} : ${Math.round(30 + (totalRounded - 30) * 0.3)}€<br>
+            💵 ${currentLang === 'fr' ? 'Solde sur place' : currentLang === 'en' ? 'Balance on site' : 'Saldo sul posto'} : ${Math.round(totalRounded - (30 + (totalRounded - 30) * 0.3))}€
         `;
     }
 
@@ -1854,7 +1889,7 @@
         const db = document.querySelector('#durationSelector button.active');
         const fb = document.querySelector('#formulaSelector button.active');
         const lb = document.querySelector('#locationSelector button.active');
-        if(db && fb && lb) {
+        if (db && fb && lb) {
             const { total } = calculateBudget(parseInt(db.dataset.days), fb.dataset.formula, lb.dataset.loc);
             document.getElementById('devisBudgetTotal').value = `${Math.round(total)}€ (${Math.round(total * currentExchangeRate).toLocaleString()} Ar)`;
         }
@@ -1863,27 +1898,26 @@
 
     async function sendDevis(event) {
         event.preventDefault();
-        if(FORMSPREE_ENDPOINT === "https://formspree.io/f/MON_ID") {
-            showToast("⚠️ Configuration Formspree requise : créez un compte sur formspree.io et remplacez MON_ID");
+        if (FORMSPREE_ENDPOINT === "https://formspree.io/f/MON_ID") {
+            showToast("⚠️ Configuration Formspree requise");
             return;
         }
-        showToast("✅ Devis envoyé ! Randria vous répond sous 24h.");
+        showToast(currentLang === 'fr' ? "✅ Devis envoyé ! Randria vous répond sous 24h." : currentLang === 'en' ? "✅ Quote sent! Randria will reply within 24h." : "✅ Preventivo inviato! Randria ti risponderà entro 24h.");
         closeModal('devisModal');
         document.getElementById('devisForm').reset();
     }
 
     async function sendRootsDevis(event) {
         event.preventDefault();
-        if(FORMSPREE_ROOTS_ENDPOINT === "https://formspree.io/f/MON_ID_ROOTS") {
+        if (FORMSPREE_ROOTS_ENDPOINT === "https://formspree.io/f/MON_ID_ROOTS") {
             showToast("⚠️ Configuration Formspree Roots requise");
             return;
         }
-        showToast("✅ Demande Roots envoyée !");
+        showToast(currentLang === 'fr' ? "✅ Demande Roots envoyée !" : currentLang === 'en' ? "✅ Roots request sent!" : "✅ Richiesta Roots inviata!");
         closeModal('rootsDevisModal');
         document.getElementById('rootsDevisForm').reset();
     }
 
-    // Event listeners
     document.getElementById("formulaSelector").addEventListener("click", e => {
         if (e.target.tagName === 'BUTTON') {
             document.querySelectorAll('#formulaSelector button').forEach(b => b.classList.remove('active'));
@@ -1910,7 +1944,7 @@
             if (isLoggedIn) updateExtrasDisplay(e.target.dataset.loc);
         }
     });
-    
+
     document.querySelectorAll('.people-selector button').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.people-selector button').forEach(b => b.classList.remove('active'));
@@ -1919,7 +1953,7 @@
             updateBudgetDisplay();
         });
     });
-    
+
     document.querySelectorAll('#rootsPeopleSelector button').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('#rootsPeopleSelector button').forEach(b => b.classList.remove('active'));
@@ -1928,20 +1962,17 @@
         });
     });
 
-    function openRootsInterface() { 
-        document.getElementById('rootsInterface').classList.add('active');
-        updateRootsBudgetDisplay();
-    }
+    function openRootsInterface() { document.getElementById('rootsInterface').classList.add('active'); updateRootsBudgetDisplay(); }
     function closeRootsInterface() { document.getElementById('rootsInterface').classList.remove('active'); }
 
     function renderDestinations() {
         document.getElementById("destinationsGrid").innerHTML = destinationsData.map(d => `
-            <div class="card" onclick="showProgramme('${d.key}')">
-                <div class="card-img" style="background-image:url('${d.image}')"><span class="overlay-badge">${d.badge}</span></div>
-                <div class="card-content"><h3>${d.name}</h3><p>${d.desc}</p>
-                <div class="card-meta"><span><i class="fas fa-cloud-sun"></i> ${d.meteo}</span><span><i class="fas fa-clock"></i> ${d.duree}</span></div>
-                <p style="font-size:0.8rem;"><i class="fas fa-star-of-life"></i> ${d.activites}</p>
-                <button class="reserve-btn">📅 Voir programme</button></div>
+            <div class="card">
+                <div class="card-img" style="background-image:url('${d.image}');" onclick="event.stopPropagation(); openLightbox('${d.image}')"><span class="overlay-badge">${d.badge}</span></div>
+                <div class="card-content" onclick="showProgramme('${d.key}')"><h3>${d.name}</h3><p>${d.desc[currentLang] || d.desc.fr}</p>
+                <div class="card-meta"><span><i class="fas fa-cloud-sun"></i> ${d.meteo[currentLang] || d.meteo.fr}</span><span><i class="fas fa-clock"></i> ${d.duree[currentLang] || d.duree.fr}</span></div>
+                <p style="font-size:0.8rem;"><i class="fas fa-star-of-life"></i> ${d.activites[currentLang] || d.activites.fr}</p>
+                <button class="reserve-btn">📅 ${currentLang === 'fr' ? 'Voir programme' : currentLang === 'en' ? 'See program' : 'Vedi programma'}</button></div>
             </div>`).join('');
     }
 
@@ -1950,8 +1981,8 @@
             <div class="card" onclick="showFormuleDetail('${s.formula}')">
                 <div class="card-content" style="text-align:center;padding:28px;">
                     <span class="overlay-badge" style="position:static;">${s.badge}</span>
-                    <h3>${s.name}</h3><p>${s.desc}</p>
-                    <button class="reserve-btn">🔍 Voir le détail</button>
+                    <h3>${s.name[currentLang] || s.name.fr}</h3><p>${s.desc[currentLang] || s.desc.fr}</p>
+                    <button class="reserve-btn">🔍 ${currentLang === 'fr' ? 'Voir le détail' : currentLang === 'en' ? 'See details' : 'Vedi dettaglio'}</button>
                 </div>
             </div>`).join('');
     }
@@ -1961,10 +1992,10 @@
             const s = sortiesDetailData[key];
             return `<div class="card" onclick="showSortieDetail('${key}')">
                         <div class="card-content">
-                            <h3>${s.title}</h3>
-                            <p>${s.desc.substring(0, 80)}...</p>
-                            <p style="font-size:0.8rem;"><i class="fas fa-map-marker-alt"></i> ${s.lieux.length} lieux à découvrir</p>
-                            <button class="reserve-btn">🔍 Voir les sorties</button>
+                            <h3>${s.title[currentLang] || s.title.fr}</h3>
+                            <p>${(s.desc[currentLang] || s.desc.fr).substring(0, 80)}...</p>
+                            <p style="font-size:0.8rem;"><i class="fas fa-map-marker-alt"></i> ${s.lieux.length} ${currentLang === 'fr' ? 'lieux' : currentLang === 'en' ? 'places' : 'locali'}</p>
+                            <button class="reserve-btn">🔍 ${currentLang === 'fr' ? 'Voir les sorties' : currentLang === 'en' ? 'See outings' : 'Vedi uscite'}</button>
                         </div>
                     </div>`;
         }).join('');
@@ -1974,14 +2005,14 @@
         document.getElementById("sortiesDetailContainer").innerHTML = Object.keys(sortiesDetailData).map(key => {
             const s = sortiesDetailData[key];
             return `<div class="sortie-detail-box">
-                        <h4>${s.title}</h4>
-                        <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:12px;">${s.desc}</p>
+                        <h4>${s.title[currentLang] || s.title.fr}</h4>
+                        <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:12px;">${s.desc[currentLang] || s.desc.fr}</p>
                         ${s.lieux.map(l => `<div style="background:#f9fdf9; border-radius:12px; padding:12px; margin-bottom:8px; border-left:4px solid var(--primary);">
-                            <strong>${l.nom}</strong> <span style="background:var(--primary); color:white; padding:2px 8px; border-radius:10px; font-size:0.7rem;">${l.type}</span>
-                            <p style="font-size:0.8rem; margin-top:4px;">${l.desc}</p>
+                            <strong>${l.nom}</strong> <span style="background:var(--primary); color:white; padding:2px 8px; border-radius:10px; font-size:0.7rem;">${l.type[currentLang] || l.type.fr}</span>
+                            <p style="font-size:0.8rem; margin-top:4px;">${l.desc[currentLang] || l.desc.fr}</p>
                             <p style="font-size:0.7rem; color:var(--text-soft);"><i class="far fa-clock"></i> ${l.horaires}</p>
-                            <div style="font-size:0.75rem; color:var(--primary-dark); margin-top:4px;">💰 ${l.prix || "Prix sur place"}</div>
-                            <div style="font-size:0.7rem; background:#fff3e0; padding:4px 8px; border-radius:8px; margin-top:6px;"><i class="fas fa-lightbulb"></i> ${l.conseil || "Demandez conseil à Randria !"}</div>
+                            <div style="font-size:0.75rem; color:var(--primary-dark); margin-top:4px;">💰 ${l.prix}</div>
+                            <div style="font-size:0.7rem; background:#fff3e0; padding:4px 8px; border-radius:8px; margin-top:6px;"><i class="fas fa-lightbulb"></i> ${l.conseil[currentLang] || l.conseil.fr}</div>
                         </div>`).join('')}
                     </div>`;
         }).join('');
@@ -1989,28 +2020,28 @@
 
     function renderPartners() {
         document.getElementById("partnersGrid").innerHTML = partnersData.map(p => `
-            <div class="partner-card"><div class="partner-header"><h4><i class="fas fa-handshake"></i> ${p.name} <span class="partner-type">${p.type}</span></h4></div>
-            <div class="partner-content"><p>${p.desc}</p><div class="partner-contact"><i class="fas fa-phone-alt"></i> ${p.contact}</div>
-            <button class="reserve-btn">Réserver via HOLDEST</button></div></div>`).join('');
+            <div class="partner-card"><div class="partner-header"><h4><i class="fas fa-handshake"></i> ${p.name} <span class="partner-type">${p.type[currentLang] || p.type.fr}</span></h4></div>
+            <div class="partner-content"><p>${p.desc[currentLang] || p.desc.fr}</p><div class="partner-contact"><i class="fas fa-phone-alt"></i> ${p.contact}</div>
+            <button class="reserve-btn">${currentLang === 'fr' ? 'Réserver via HOLDEST' : currentLang === 'en' ? 'Book via HOLDEST' : 'Prenota via HOLDEST'}</button></div></div>`).join('');
     }
 
     function renderFAQ() {
         document.getElementById("faqGrid").innerHTML = faqData.map(f => `
-            <div class="faq-card" onclick="this.classList.toggle('open')"><h4>❓ ${f.q}</h4><p>${f.a}</p></div>
+            <div class="faq-card" onclick="this.classList.toggle('open')"><h4>❓ ${f.q[currentLang] || f.q.fr}</h4><p>${f.a[currentLang] || f.a.fr}</p></div>
         `).join('');
     }
 
     function renderTestimonials() {
         document.getElementById("testimonialsContainer").innerHTML = testimonialsData.map(t => `
-            <div class="testimonial-card"><div class="stars">${'★'.repeat(t.stars)}</div><p>« ${t.text} »</p><div style="margin-top:8px; font-weight:600;">— ${t.author} <span style="font-size:0.7rem; color:var(--text-soft);">(${t.source})</span></div></div>
+            <div class="testimonial-card"><div class="stars">${'★'.repeat(t.stars)}</div><p>« ${t.text[currentLang] || t.text.fr} »</p><div style="margin-top:8px; font-weight:600;">— ${t.author} <span style="font-size:0.7rem; color:var(--text-soft);">(${t.source})</span></div></div>
         `).join('');
     }
 
     function showProgramme(cityKey) {
         const prog = programmesData[cityKey] || programmesData.tana;
-        let msg = "🗓️ Programme HOLDEST × Junga Tour :\n\n";
-        prog.forEach(j => { msg += `Jour ${j.jour} : ${j.desc}\n\n`; });
-        msg += "\n✨ Randria vous attend !";
+        let msg = `🗓️ ${currentLang === 'fr' ? 'Programme HOLDEST × Junga Tour' : currentLang === 'en' ? 'HOLDEST × Junga Tour Program' : 'Programma HOLDEST × Junga Tour'} :\n\n`;
+        prog.forEach(j => { msg += `${currentLang === 'fr' ? 'Jour' : currentLang === 'en' ? 'Day' : 'Giorno'} ${j.jour} : ${j[currentLang] || j.fr}\n\n`; });
+        msg += `\n✨ ${currentLang === 'fr' ? 'Randria vous attend !' : currentLang === 'en' ? 'Randria is waiting for you!' : 'Randria ti aspetta!'}`;
         alert(msg);
     }
 
@@ -2048,7 +2079,7 @@
         const q = document.getElementById('searchInput').value.toLowerCase();
         const found = destinationsData.find(d => d.name.toLowerCase().includes(q) || d.key.includes(q));
         if (found) { activateScreen('home'); showProgramme(found.key); }
-        else if (q) alert("Essayez : Tana, Nosy Be, Majunga, Diego, Tamatave");
+        else if (q) alert(currentLang === 'fr' ? "Essayez : Tana, Nosy Be, Majunga, Diego, Tamatave" : currentLang === 'en' ? "Try: Tana, Nosy Be, Majunga, Diego, Tamatave" : "Prova: Tana, Nosy Be, Majunga, Diego, Tamatave");
     });
     document.getElementById('searchInput').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('searchBtn').click(); });
     document.getElementById('devisForm').addEventListener('submit', sendDevis);
@@ -2057,6 +2088,7 @@
     // Initialisation
     fetchExchangeRate();
     setInterval(fetchExchangeRate, 3600000);
+    changeLanguage('fr');
     renderDestinations();
     renderServices();
     renderSortiesAccueil();
